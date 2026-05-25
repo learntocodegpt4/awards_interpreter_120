@@ -235,7 +235,7 @@ public static class Ma000120InterpretationBuilder
 
     private static string InferType(string name)
     {
-        if (name.StartsWith("Is") || name.StartsWith("Has") || name.EndsWith("Required") || name.Contains("Interrupted") || name.Contains("Remain")) return "bool";
+        if (name.StartsWith("Is") || name.StartsWith("Has") || name.EndsWith("Required") || name.Contains("Requires") || name.Contains("Interrupted") || name.Contains("Remain")) return "bool";
         if (name.Contains("Code") || name.Contains("Category") || name.Contains("Type") || name.Contains("Tag") || name.Contains("Profile")) return "string";
         return "decimal";
     }

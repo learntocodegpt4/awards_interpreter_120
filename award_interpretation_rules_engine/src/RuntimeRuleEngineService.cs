@@ -194,6 +194,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         result.Calculation.PayPeriodReference = request.PayRun.PayPeriodReference;
 
         ApplyStacking(result.Calculation, result.StackingDecisions);
+        ApplyAggregateExportBlocking(result.Calculation, _options.Engine.BlockPayrollExportOnErrors);
         FinaliseAggregate(result.Calculation, request.PayRun.Employee.OpeningToilBalanceHours);
         ProjectComplianceExceptions(result.Calculation, result.ComplianceExceptions);
         ProjectPayLineEvents(request, result);
@@ -314,6 +315,15 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
            left.RuleId == right.RuleId &&
            left.OutputKey == right.OutputKey &&
            left.Amount == right.Amount;
+
+    private static void ApplyAggregateExportBlocking(AggregatePayRunResult aggregate, bool blockPayrollExportOnErrors)
+    {
+        if (!blockPayrollExportOnErrors || !aggregate.Warnings.Any(w => w.BlocksPayrollExport) || aggregate.PayrollLines.Count == 0)
+            return;
+
+        aggregate.BlockedPayrollLines.AddRange(aggregate.PayrollLines.Select(l => l with { SourceBucket = "blocked_payroll_lines", Exportable = false, RequiresReview = true }));
+        aggregate.PayrollLines.Clear();
+    }
 
     private static void FinaliseAggregate(AggregatePayRunResult aggregate, decimal openingToilBalanceHours)
     {

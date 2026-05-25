@@ -20,7 +20,7 @@ This matrix maps requirements to implementation tasks, automated tests, and Manu
 | Parser accuracy is measured against a ground-truth corpus. | INT-014, INT-015 | F1/precision/recall deployment gate. | QA reviews corpus and regression report. | TODO |
 | Penalty parser coverage matches allowance parser coverage. | INT-016 | `RosteredAI_ETL/tests/test_golden_corpus.py` covers MA000120 penalty rows and review routing. | QA validates penalty source rows. | IN_PROGRESS |
 | Rule snapshots are immutable and versioned. | RULE-001 | Contract and immutability tests. | QA confirms calculation references one version. | TODO |
-| Published semantics compile to engine rules. | RULE-002 | Compiler tests from golden interpreter outputs. | QA confirms compiled rule matches clause. | TODO |
+| Published semantics compile to engine rules. | RULE-002 | `dotnet run --project award_interpretation_rules_engine.tests/AwardInterpretationRulesEngine.Tests.csproj` validates the MA000120 compiler baseline fixture and POC 2 scenario parity. | QA confirms compiled rule source IDs, hashes, and clause references match `MA000120.compiler-baseline.semantic-rows.json`. | DONE |
 | Timesheet inputs normalize before calculation. | RULE-003 | Segment normalization tests. | QA validates segment timeline. | TODO |
 | Day and public holiday boundaries split correctly. | RULE-004 | Boundary matrix tests. | RULE-MQA-008, RULE-MQA-009. | TODO |
 | Allowance triggers calculate correctly. | RULE-005 | Trigger and basis tests. | RULE-MQA-001 through RULE-MQA-006. | TODO |

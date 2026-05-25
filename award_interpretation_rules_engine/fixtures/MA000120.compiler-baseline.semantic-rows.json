@@ -1,0 +1,382 @@
+{
+  "awardCode": "MA000120",
+  "publishedYear": 2026,
+  "effectiveFrom": "2026-03-01",
+  "effectiveTo": null,
+  "sourceSnapshotHash": "afd49d15dce3743067575bfc4fa1ee9d1163f9ea2fa0167fa3027b73ab25ea67",
+  "parserVersion": "ma000120-template-parser/1.0.0",
+  "compilerVersion": "rule-compiler.ma000120.v1",
+  "approvedBy": "governed_ma000120_compiler_baseline",
+  "publishedAtUtc": "2026-03-01T00:00:00+00:00",
+  "semanticRows": [
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-ORDINARY_TIME",
+      "awardReference": {
+        "clause": "21",
+        "title": "Ordinary hours of work and rostering",
+        "url": "fixtures/MA000120.acceptance.html#clause-21"
+      },
+      "sourceText": "Ordinary hours span and daily/weekly limits.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "65d9ee62eb9aac912d9772fb0f13897a91f01350dced74c6adb19ffd8cad2f0c",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["weekday"],
+          "source": "explicit_text"
+        },
+        "day_types": ["weekday"],
+        "public_holiday": false,
+        "hour_type": "ordinary_hours",
+        "trigger": "ordinary_hours",
+        "basis": "per_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "exclusive",
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "ordinary time",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "21",
+            "source": "award_clause_reference"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-OVERTIME",
+      "awardReference": {
+        "clause": "23.2",
+        "title": "Overtime rates",
+        "url": "fixtures/MA000120.acceptance.html#clause-23.2"
+      },
+      "sourceText": "Overtime for daily, weekly, outside span, part-time pattern and broken spread triggers.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "b6f7a644661909904a6ec019955ea36c3d609d9fe9a78bf206ecc551c9db8bf7",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["weekday"],
+          "source": "explicit_text"
+        },
+        "day_types": ["weekday"],
+        "public_holiday": false,
+        "hour_type": "overtime",
+        "trigger": "overtime",
+        "basis": "per_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "exclusive",
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "overtime",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "23.2",
+            "source": "award_clause_reference"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-ALLOWANCES",
+      "awardReference": {
+        "clause": "15",
+        "title": "Allowances",
+        "url": "fixtures/MA000120.acceptance.html#clause-15"
+      },
+      "sourceText": "Broken shift, laundry, first aid, meal, vehicle, fares and educational leader allowances.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete_defaulted",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "1fdbbe8f423a04f5f5444c42108560ea87a04c9c2f718cf56b34bfe7ddcfe56f",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "allowance",
+        "days": {
+          "mode": "include",
+          "values": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+          "source": "domain_default"
+        },
+        "day_types": ["everyday"],
+        "public_holiday": false,
+        "hour_type": "allowance",
+        "trigger": "allowance",
+        "basis": "per_trigger",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "cumulative",
+        "defaulted_fields": ["days", "day_types"],
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "allowances",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "15",
+            "source": "award_clause_reference"
+          },
+          {
+            "field": "days",
+            "text": "Allowances are event-triggered and not constrained to a named day in the source row.",
+            "source": "domain_default"
+          },
+          {
+            "field": "day_types",
+            "text": "Allowance rows default to everyday until a narrower source condition is parsed.",
+            "source": "domain_default"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-PUBLIC_HOLIDAY",
+      "awardReference": {
+        "clause": "27",
+        "title": "Public holidays",
+        "url": "fixtures/MA000120.acceptance.html#clause-27"
+      },
+      "sourceText": "Public holiday and agreed substitution treatment.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "9079efa540a666187a19073aac5bc85065f58b19c1ef2e2c7c1aaf1bf89d7fbf",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["public_holiday"],
+          "source": "explicit_text"
+        },
+        "day_types": ["public_holiday"],
+        "public_holiday": true,
+        "hour_type": "public_holiday",
+        "trigger": "public_holiday",
+        "basis": "per_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "highest_of",
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "public holiday",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "27",
+            "source": "award_clause_reference"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-TOIL",
+      "awardReference": {
+        "clause": "23.8",
+        "title": "Time off instead of payment for overtime",
+        "url": "fixtures/MA000120.acceptance.html#clause-23.8"
+      },
+      "sourceText": "Written agreement may convert eligible overtime to TOIL.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "612f316fc40bf0cb8342565b1ddcb0e310b4d4c234527637f49f3cd72a8a4d26",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["weekday"],
+          "source": "explicit_text"
+        },
+        "day_types": ["weekday"],
+        "public_holiday": false,
+        "hour_type": "toil",
+        "trigger": "toil",
+        "basis": "per_overtime_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "replacement",
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "time off instead of payment",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "23.8",
+            "source": "award_clause_reference"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-REST_FATIGUE",
+      "awardReference": {
+        "clause": "22.3",
+        "title": "Rest between work periods",
+        "url": "fixtures/MA000120.acceptance.html#clause-22.3"
+      },
+      "sourceText": "Insufficient rest after overtime triggers review and overtime mode.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "7414f872271a95cfb383317695e4c9adb38250baf9863c8868cbe0dccf936501",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["weekday"],
+          "source": "explicit_text"
+        },
+        "day_types": ["weekday"],
+        "public_holiday": false,
+        "hour_type": "insufficient_rest",
+        "trigger": "insufficient_rest",
+        "basis": "per_affected_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "replacement",
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "rest between work periods",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "22.3",
+            "source": "award_clause_reference"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-LEAVE_LOADING",
+      "awardReference": {
+        "clause": "25",
+        "title": "Annual leave loading",
+        "url": "fixtures/MA000120.acceptance.html#clause-25"
+      },
+      "sourceText": "Annual leave loading pays the higher applicable loading outcome.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete_defaulted",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "4d65a1749adf85e734de6e26198d78772f3facf81f27955ab5526732c735cb09",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+          "source": "domain_default"
+        },
+        "day_types": ["everyday"],
+        "public_holiday": false,
+        "hour_type": "annual_leave_loading",
+        "trigger": "annual_leave_loading",
+        "basis": "per_leave_hour",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "highest_of",
+        "defaulted_fields": ["days", "day_types"],
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "annual leave loading",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "25",
+            "source": "award_clause_reference"
+          },
+          {
+            "field": "days",
+            "text": "Leave loading applies to leave hours rather than a worked weekday condition.",
+            "source": "domain_default"
+          },
+          {
+            "field": "day_types",
+            "text": "Leave loading defaults to everyday because the leave date carries the day type.",
+            "source": "domain_default"
+          }
+        ]
+      }
+    },
+    {
+      "rowId": "MA000120-COMPILER-BASELINE-BLOCKED_EXPORTS",
+      "awardReference": {
+        "clause": "Governance",
+        "title": "Manual review and payroll export blocking",
+        "url": "fixtures/MA000120.acceptance.html#governance"
+      },
+      "sourceText": "Manual-review and evidence failures block payroll export.",
+      "reviewStatus": "approved",
+      "parseStatus": "complete_defaulted",
+      "effectiveFrom": "2026-03-01",
+      "effectiveTo": null,
+      "contentSha256": "58bfb416b43810dc417ee31c7b26852750e180076e1263fe4d15d4207e233394",
+      "conditionJson": {
+        "schema_version": "1.0",
+        "entity_type": "pay_rule",
+        "days": {
+          "mode": "include",
+          "values": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+          "source": "domain_default"
+        },
+        "day_types": ["everyday"],
+        "public_holiday": false,
+        "hour_type": "manual_review_block",
+        "trigger": "manual_review_block",
+        "basis": "per_blocked_line",
+        "base_rate_reference": "ordinary_rate",
+        "stacking_policy": "exclusive",
+        "defaulted_fields": ["days", "day_types"],
+        "evidence": [
+          {
+            "field": "trigger",
+            "text": "review before payroll export",
+            "source": "ma000120_deterministic_template"
+          },
+          {
+            "field": "clause",
+            "text": "Governance",
+            "source": "award_clause_reference"
+          },
+          {
+            "field": "days",
+            "text": "Governance checks are not constrained to a named day in the source row.",
+            "source": "domain_default"
+          },
+          {
+            "field": "day_types",
+            "text": "Governance checks default to every day because export blocking follows any affected line.",
+            "source": "domain_default"
+          }
+        ]
+      }
+    }
+  ]
+}
