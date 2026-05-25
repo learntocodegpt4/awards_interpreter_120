@@ -1,0 +1,32 @@
+name: Governed rule engine CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - dev/**
+
+permissions:
+  contents: read
+
+jobs:
+  governed-rule-engine:
+    name: Parser, compiler, runtime, and MA000120 gates
+    runs-on: ubuntu-latest
+    env:
+      DOTNET_NOLOGO: true
+      DOTNET_CLI_TELEMETRY_OPTOUT: true
+      GOLDEN_FIXTURE_APPROVED: ${{ github.event_name != 'pull_request' || contains(join(github.event.pull_request.labels.*.name, ','), 'fixture-approved') }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Run governed rule engine CI gates
+        run: bash scripts/run-ci.sh
