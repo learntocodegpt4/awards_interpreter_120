@@ -55,6 +55,12 @@ MA000120 pay run and matched the committed POC CLI fixtures byte-for-byte.
 | `MA000120.governed-library.json` | `85c12ee146c716560f9b7c8c86651395ccb4be752acdbced17cf10d303000a17` | No difference |
 | `MA000120.calculation.json` | `d2676aa5386155acf5bffc7b63ca1d3e57b9f3318bb9956fdd8924151fa05511` | No difference |
 
+Validation evidence:
+
+- `dotnet test award_interpretation_rules_engine.runtime_tests/AwardInterpretationRulesEngine.Tests.csproj` passed: 6/6 tests.
+- `dotnet run --project award_interpretation_rules_engine/AwardInterpretationRulesEngine.csproj -- --acceptance` passed the MA000120 acceptance suite.
+- `dotnet run --project award_interpretation_rules_engine.tests/AwardInterpretationRulesEngine.Tests.csproj` passed: 6/6 compiler tests.
+
 ## Difference classification
 
 No production-vs-POC differences were observed.
