@@ -130,6 +130,46 @@ public sealed class RuntimeRuleEngineServiceTests
     }
 
     [Fact]
+    public void GovernedAwardRuleEngine_applies_central_rounding_policy_to_pay_line_math()
+    {
+        var engine = new GovernedAwardRuleEngine(BuildRoundingPolicyLibrary(), new EngineOptions());
+        var result = engine.Calculate(new PayRunRequest
+        {
+            EmployeeReference = "EMP-ROUND",
+            PayPeriodReference = "P-ROUND",
+            Parameters = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ClassificationCode"] = "ROUND",
+                ["PaidHours"] = 7.125m,
+                ["VehicleKm"] = 3.5m,
+                ["ShiftCount"] = 1m,
+                ["AllPurposeAllowanceHourly"] = 0.335m
+            }
+        });
+
+        AssertLine("HourlyAmount", 223.25m, 223.247625m);
+        AssertLine("DailyAllowanceAmount", 10.01m, 10.005m);
+        AssertLine("PerShiftAllowanceAmount", 2.34m, 2.335m);
+        AssertLine("PerKmAllowanceAmount", 1.17m, 1.1655m);
+        AssertLine("PercentageAllowanceAmount", 12.12m, 12.11544m);
+        AssertLine("MultiplierAmount", 262.32m, 262.315959375m);
+        AssertLine("AdditiveAmount", 225.63m, 225.6345m);
+        Assert.Equal(736.84m, result.PayrollGross);
+        Assert.Equal(result.PayrollGross, result.AwardReferenceGross);
+
+        void AssertLine(string outputKey, decimal roundedAmount, decimal rawAmount)
+        {
+            var line = Assert.Single(result.PayrollLines.Where(l => l.OutputKey == outputKey));
+            Assert.Equal(roundedAmount, line.Amount);
+
+            var trace = Assert.Single(result.RuleTrace.Where(t => t.OutputKey == outputKey));
+            Assert.Equal(rawAmount, trace.RawValue);
+            Assert.Equal(roundedAmount, trace.RoundedValue);
+            Assert.Equal(rawAmount, Assert.IsType<decimal>(trace.Value));
+        }
+    }
+
+    [Fact]
     public async Task CalculateAsync_rejects_unapproved_or_incomplete_snapshots_as_compliance_exception()
     {
         var draftSnapshot = Snapshot("MA000120-draft", new DateOnly(2026, 1, 1), null, 29.52m, "draft") with { Status = "draft" };
@@ -270,6 +310,66 @@ public sealed class RuntimeRuleEngineServiceTests
             new PayCategoryMap { OutputKey = "LowDayPenaltyAmount", DefaultPayCategory = "Low penalty" },
             new PayCategoryMap { OutputKey = "HighDayPenaltyAmount", DefaultPayCategory = "High penalty" }
         ]
+    };
+
+    private static GovernedExpressionLibrary BuildRoundingPolicyLibrary() => new()
+    {
+        LibraryId = "ROUNDING_POLICY_TEST_LIBRARY",
+        LibraryName = "Rounding Policy Test Library",
+        AwardCode = "MA000120",
+        AwardName = "Children's Services Award 2010",
+        EffectiveFrom = "2026-01-01",
+        Orchestration = new Orchestration { EvaluationOrder = ["PAY_LINE_CALCULATION"] },
+        ReferenceData = new ReferenceData
+        {
+            Classifications =
+            [
+                new ClassificationRate
+                {
+                    Code = "ROUND",
+                    Name = "Rounding policy test classification",
+                    Weekly = 1190.654m,
+                    Hourly = 31.333m,
+                    ClauseReference = "rounding-policy-test"
+                }
+            ],
+            Allowances = new AllowanceReference { StandardRateWeekly = 1121.80m }
+        },
+        Parameters = [new ParameterDefinition { Name = "ClassificationCode", Required = true, Type = "string" }],
+        Rules =
+        [
+            RoundingRule("ROUND_HOURLY", "Hourly amount.", "PaidHours * BaseRate", "HourlyAmount"),
+            RoundingRule("ROUND_DAILY", "Daily allowance amount.", "10.005m", "DailyAllowanceAmount"),
+            RoundingRule("ROUND_PER_SHIFT", "Per-shift allowance amount.", "ShiftCount * 2.335m", "PerShiftAllowanceAmount"),
+            RoundingRule("ROUND_PER_KM", "Per-km allowance amount.", "VehicleKm * 0.333m", "PerKmAllowanceAmount"),
+            RoundingRule("ROUND_PERCENTAGE", "Percentage allowance amount.", "StandardRateWeekly * 0.0108m", "PercentageAllowanceAmount"),
+            RoundingRule("ROUND_MULTIPLIER", "Multiplier amount.", "PaidHours * BaseRate * 1.175m", "MultiplierAmount"),
+            RoundingRule("ROUND_ADDITIVE", "Additive amount.", "(BaseRate + AllPurposeAllowanceHourly) * PaidHours", "AdditiveAmount")
+        ],
+        PayCategoryMapping =
+        [
+            new PayCategoryMap { OutputKey = "HourlyAmount", DefaultPayCategory = "Hourly" },
+            new PayCategoryMap { OutputKey = "DailyAllowanceAmount", DefaultPayCategory = "Daily" },
+            new PayCategoryMap { OutputKey = "PerShiftAllowanceAmount", DefaultPayCategory = "Per shift" },
+            new PayCategoryMap { OutputKey = "PerKmAllowanceAmount", DefaultPayCategory = "Per km" },
+            new PayCategoryMap { OutputKey = "PercentageAllowanceAmount", DefaultPayCategory = "Percentage" },
+            new PayCategoryMap { OutputKey = "MultiplierAmount", DefaultPayCategory = "Multiplier" },
+            new PayCategoryMap { OutputKey = "AdditiveAmount", DefaultPayCategory = "Additive" }
+        ]
+    };
+
+    private static RuleDefinition RoundingRule(string id, string description, string expression, string outputKey) => new()
+    {
+        RuleId = id,
+        Version = "1.0",
+        EffectiveFrom = "2026-01-01",
+        EvaluationPhase = "PAY_LINE_CALCULATION",
+        ClauseReference = "rounding-policy-test",
+        Description = description,
+        Expression = expression,
+        OutputKey = outputKey,
+        OutputType = "decimal",
+        Action = "payroll_line"
     };
 
     private static PayRunInput StandardPayRun(DateOnly date) => new()

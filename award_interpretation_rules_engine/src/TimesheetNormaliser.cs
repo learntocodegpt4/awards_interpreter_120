@@ -32,12 +32,12 @@ public sealed class TimesheetNormaliser
 
             var brokenShiftCount = analysedShifts.Count;
             var brokenSpreadHours = brokenShiftCount > 1
-                ? (decimal)(analysedShifts.Last().EndDateTime - analysedShifts.First().StartDateTime).TotalHours
+                ? PayCalculationPolicy.DurationToHours(analysedShifts.Last().EndDateTime - analysedShifts.First().StartDateTime)
                 : 0m;
 
             foreach (var analysed in analysedShifts)
             {
-                var restHours = previousShiftEnd is null ? 999m : (decimal)(analysed.StartDateTime - previousShiftEnd.Value).TotalHours;
+                var restHours = previousShiftEnd is null ? 999m : PayCalculationPolicy.DurationToHours(analysed.StartDateTime - previousShiftEnd.Value);
                 previousShiftEnd = analysed.EndDateTime;
                 var higherDutiesRate = ResolveHigherDutiesRate(input, analysed.Shift);
                 var paidHoursBeforeSegmentInShift = 0m;
@@ -292,7 +292,7 @@ public sealed class TimesheetNormaliser
 
     private static AnalysedSegment BuildSegment(AnalysedShift shift, DateTime start, DateTime end)
     {
-        var rawHours = (decimal)(end - start).TotalHours;
+        var rawHours = PayCalculationPolicy.DurationToHours(end - start);
         var segmentDate = DateOnly.FromDateTime(start);
 
         return new AnalysedSegment
@@ -318,7 +318,7 @@ public sealed class TimesheetNormaliser
         var end = Combine(day.Date, shift.End);
         if (end <= start) end = end.AddDays(1);
 
-        var rawMinutes = (decimal)(end - start).TotalMinutes;
+        var rawMinutes = PayCalculationPolicy.DurationToMinutes(end - start);
         var unpaidBreakMinutes = 0m;
         var paidMealBreakMinutes = 0m;
         var paidRestPauseCount = 0m;
@@ -333,7 +333,7 @@ public sealed class TimesheetNormaliser
             var breakEnd = Combine(day.Date, brk.End);
             if (breakEnd <= breakStart) breakEnd = breakEnd.AddDays(1);
 
-            var minutes = (decimal)(breakEnd - breakStart).TotalMinutes;
+            var minutes = PayCalculationPolicy.DurationToMinutes(breakEnd - breakStart);
             if (!brk.Paid) unpaidBreakMinutes += minutes;
             if (brk.Paid && brk.Type == "meal") paidMealBreakMinutes += minutes;
             if (brk.Paid && brk.Type == "rest" && minutes >= 10) paidRestPauseCount++;
@@ -352,8 +352,8 @@ public sealed class TimesheetNormaliser
             EndMinutes = ToMinutesFromMidnight(shift.End) <= ToMinutesFromMidnight(shift.Start)
                 ? ToMinutesFromMidnight(shift.End) + 1440
                 : ToMinutesFromMidnight(shift.End),
-            RawShiftHours = rawMinutes / 60m,
-            WorkedHours = workedMinutes / 60m,
+            RawShiftHours = PayCalculationPolicy.RoundHours(rawMinutes / 60m),
+            WorkedHours = PayCalculationPolicy.RoundHours(workedMinutes / 60m),
             UnpaidMealBreakMinutes = shift.Breaks.Where(b => b.Type == "meal" && !b.Paid).Sum(b => BreakMinutes(day.Date, b)),
             PaidMealBreakMinutes = paidMealBreakMinutes,
             PaidRestPauseCount = paidRestPauseCount,
@@ -367,7 +367,7 @@ public sealed class TimesheetNormaliser
         if (dayType != "weekday") return 0m;
         var early = Math.Max(0m, Math.Min(shift.EndMinutes, 360) - shift.StartMinutes);
         var late = Math.Max(0m, shift.EndMinutes - Math.Max(shift.StartMinutes, 1110));
-        return (early + late) / 60m;
+        return PayCalculationPolicy.RoundHours((early + late) / 60m);
     }
 
     private static decimal CalculatePartTimeOutsideRegularPatternHours(PayRunDay day, AnalysedSegment shift)
@@ -379,7 +379,7 @@ public sealed class TimesheetNormaliser
 
         var before = Math.Max(0m, Math.Min(shift.EndMinutes, regularStart) - shift.StartMinutes);
         var after = Math.Max(0m, shift.EndMinutes - Math.Max(shift.StartMinutes, regularEnd));
-        return (before + after) / 60m;
+        return PayCalculationPolicy.RoundHours((before + after) / 60m);
     }
 
     private static decimal CalculateHoursBeyondSpreadCap(AnalysedSegment shift, List<AnalysedShift> allDayShifts)
@@ -389,7 +389,7 @@ public sealed class TimesheetNormaliser
         var capStart = spreadStart.AddHours(12);
         if (shift.EndDateTime <= capStart) return 0m;
         var overlapStart = shift.StartDateTime > capStart ? shift.StartDateTime : capStart;
-        return (decimal)(shift.EndDateTime - overlapStart).TotalHours;
+        return PayCalculationPolicy.DurationToHours(shift.EndDateTime - overlapStart);
     }
 
     private static decimal CalculateMissedMealPenaltyHours(AnalysedSegment shift)
@@ -404,7 +404,7 @@ public sealed class TimesheetNormaliser
         var start = Combine(date, brk.Start);
         var end = Combine(date, brk.End);
         if (end <= start) end = end.AddDays(1);
-        return (decimal)(end - start).TotalMinutes;
+        return PayCalculationPolicy.DurationToMinutes(end - start);
     }
 
     private static DateTime Combine(DateOnly date, string hhmm)
@@ -422,7 +422,7 @@ public sealed class TimesheetNormaliser
     private static decimal MinutesFromDateStart(DateOnly date, DateTime value)
     {
         var dateStart = date.ToDateTime(TimeOnly.MinValue);
-        return (decimal)(value - dateStart).TotalMinutes;
+        return PayCalculationPolicy.DurationToMinutes(value - dateStart);
     }
 
     private static string ResolveSegmentDayType(PayRunDay sourceDay, DateTime segmentStart)
