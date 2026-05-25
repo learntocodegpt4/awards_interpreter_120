@@ -52,7 +52,7 @@ static void PublishesApprovedFirstAidSnapshot()
     AssertEqual("ALLOW_FIRST_AID_AMOUNT", rule.RuleId, "compiled rule id");
     AssertEqual("row-first-aid", rule.SourceId, "compiled rule source id");
     AssertEqual("15.5", rule.ClauseReference, "compiled rule clause");
-    AssertEqual("FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m", rule.Expression, "baseline expression");
+    AssertEqual("!IsLeave && IsFirstPayableSegmentForDay && FirstAidRequired ? (IsOSHC ? PayableDayWorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m", rule.Expression, "baseline expression");
 }
 
 static void CompiledSnapshotCalculatesFirstAid()
@@ -191,12 +191,19 @@ static Dictionary<string, object?> BuildCompleteParameters(GovernedExpressionLib
     parameters["WorkedHours"] = 8m;
     parameters["RawShiftHours"] = 8m;
     parameters["PaidHours"] = 8m;
+    parameters["PaidHoursBeforeSegmentInShift"] = 0m;
     parameters["WeeklyHoursBeforeShift"] = 0m;
     parameters["ContractedWeeklyHours"] = 38m;
     parameters["ShiftStartMinutes"] = 480m;
     parameters["ShiftEndMinutes"] = 960m;
     parameters["IsShiftworker"] = false;
     parameters["IsPermanentNightShift"] = false;
+    parameters["IsLeave"] = false;
+    parameters["IsFirstPayableSegmentForDay"] = true;
+    parameters["PayableDayWorkedHours"] = 8m;
+    parameters["LeaveType"] = "";
+    parameters["LeaveHours"] = 0m;
+    parameters["LeavePenaltyMultiplier"] = 1m;
     parameters["IsPublicHolidayFromCalendar"] = false;
     parameters["IsActualPublicHoliday"] = false;
     parameters["IsSubstitutedPublicHoliday"] = false;

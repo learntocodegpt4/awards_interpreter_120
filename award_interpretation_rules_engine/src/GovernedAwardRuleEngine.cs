@@ -31,7 +31,7 @@ public sealed class GovernedAwardRuleEngine
             EffectiveFrom = _library.EffectiveFrom,
             EmployeeReference = request.EmployeeReference,
             PayPeriodReference = request.PayPeriodReference,
-            CalculationTimestampUtc = DateTimeOffset.UtcNow
+            CalculationTimestampUtc = _options.FixedCalculationTimestampUtc ?? DateTimeOffset.UtcNow
         };
 
         ResolveClassification(context, result);
@@ -202,7 +202,7 @@ public sealed class GovernedAwardRuleEngine
         if (amount <= 0m) return;
 
         var category = _library.PayCategoryMapping.FirstOrDefault(m => m.OutputKey == rule.OutputKey)?.DefaultPayCategory ?? rule.OutputKey;
-        var requiresReview = action.Contains("manual", StringComparison.OrdinalIgnoreCase) || action.Contains("warning", StringComparison.OrdinalIgnoreCase) || rule.ManualReviewPolicy.Contains("review", StringComparison.OrdinalIgnoreCase) || rule.ManualReviewPolicy.Contains("must", StringComparison.OrdinalIgnoreCase);
+        var requiresReview = RequiresReview(rule, action, context);
 
         var line = new PayLine
         {
@@ -223,6 +223,19 @@ public sealed class GovernedAwardRuleEngine
 
         result.AwardReferenceLines.Add(line);
         if (!requiresReview) result.PayrollLines.Add(line with { SourceBucket = "payroll_lines" });
+    }
+
+    private static bool RequiresReview(RuleDefinition rule, string action, Dictionary<string, object?> context)
+    {
+        if (action.Contains("manual", StringComparison.OrdinalIgnoreCase) || action.Contains("warning", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (rule.ManualReviewPolicy.Equals("review_if_public_holiday_substituted", StringComparison.OrdinalIgnoreCase))
+            return (ToBool(context.GetValueOrDefault("IsSubstitutedPublicHoliday")) || HasTag(GetString(context, "ShiftTag"), "agreedSubstitutedPublicHoliday"))
+                && !ToBool(context.GetValueOrDefault("HasPublicHolidayElectionEvidence"));
+
+        return rule.ManualReviewPolicy.Contains("review", StringComparison.OrdinalIgnoreCase)
+            || rule.ManualReviewPolicy.Contains("must", StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddToil(RuleDefinition rule, object? value, Dictionary<string, object?> context, PayRunResult result)
@@ -313,6 +326,9 @@ public sealed class GovernedAwardRuleEngine
 
     private static string? GetString(Dictionary<string, object?> context, string key)
         => context.TryGetValue(key, out var value) ? Convert.ToString(value, CultureInfo.InvariantCulture) : null;
+
+    private static bool HasTag(string? actual, string expected)
+        => string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
 
     private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 }

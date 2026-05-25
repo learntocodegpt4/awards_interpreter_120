@@ -18,7 +18,17 @@ public sealed class TimesheetNormaliser
 
         foreach (var day in input.Days.OrderBy(d => d.Date))
         {
+            var allowancesAppliedForDay = false;
+
+            if (day.LeaveHours > 0m)
+            {
+                segmentIndex++;
+                requests.Add(BuildLeaveRequest(input, day, segmentIndex, weeklyHoursBefore));
+                weeklyHoursBefore += day.LeaveHours;
+            }
+
             var analysedShifts = day.Shifts.Select(s => AnalyseShift(day, s)).OrderBy(s => s.StartDateTime).ToList();
+            var payableDayWorkedHours = analysedShifts.Sum(s => s.WorkedHours);
 
             var brokenShiftCount = analysedShifts.Count;
             var brokenSpreadHours = brokenShiftCount > 1
@@ -30,6 +40,7 @@ public sealed class TimesheetNormaliser
                 var restHours = previousShiftEnd is null ? 999m : (decimal)(analysed.StartDateTime - previousShiftEnd.Value).TotalHours;
                 previousShiftEnd = analysed.EndDateTime;
                 var higherDutiesRate = ResolveHigherDutiesRate(input, analysed.Shift);
+                var paidHoursBeforeSegmentInShift = 0m;
 
                 foreach (var segment in SplitIntoPayableSegments(day, analysed))
                 {
@@ -40,6 +51,7 @@ public sealed class TimesheetNormaliser
                     var isPublicHolidaySegment = IsPublicHolidaySegment(day, segment.StartDateTime, segment.EndDateTime);
                     var outsideSpanHours = CalculateOutsideOrdinarySpanHours(segmentDayType, segment);
                     var hoursBeyondBrokenSpreadCap = CalculateHoursBeyondSpreadCap(segment, analysedShifts);
+                    var appliesDailyAllowances = !allowancesAppliedForDay;
 
                     var request = new PayRunRequest
                     {
@@ -62,12 +74,19 @@ public sealed class TimesheetNormaliser
                             ["WorkedHours"] = segment.WorkedHours,
                             ["RawShiftHours"] = segment.RawShiftHours,
                             ["PaidHours"] = paidHours,
+                            ["PaidHoursBeforeSegmentInShift"] = paidHoursBeforeSegmentInShift,
                             ["WeeklyHoursBeforeShift"] = weeklyHoursBefore,
                             ["ContractedWeeklyHours"] = input.Employee.ContractedWeeklyHours,
                             ["ShiftStartMinutes"] = segment.StartMinutes,
                             ["ShiftEndMinutes"] = segment.EndMinutes,
                             ["IsShiftworker"] = input.Employee.EmploymentProfileCode.Contains("SHIFT", StringComparison.OrdinalIgnoreCase) || input.Employee.EmploymentProfileCode.Contains("NIGHT", StringComparison.OrdinalIgnoreCase),
                             ["IsPermanentNightShift"] = input.Employee.EmploymentProfileCode.Contains("PERM_NIGHT", StringComparison.OrdinalIgnoreCase) || analysed.Shift.Tag == "permanentNightShift",
+                            ["IsLeave"] = false,
+                            ["LeaveType"] = "",
+                            ["LeaveHours"] = 0m,
+                            ["LeavePenaltyMultiplier"] = 1m,
+                            ["IsFirstPayableSegmentForDay"] = appliesDailyAllowances,
+                            ["PayableDayWorkedHours"] = payableDayWorkedHours,
                             ["IsPublicHolidayFromCalendar"] = isPublicHolidaySegment,
                             ["IsActualPublicHoliday"] = isPublicHolidaySegment || day.ActualPublicHoliday,
                             ["IsSubstitutedPublicHoliday"] = day.SubstitutedPublicHoliday,
@@ -92,26 +111,102 @@ public sealed class TimesheetNormaliser
                             ["ToilTakenHours"] = 0m,
                             ["ForceToilPayoutHours"] = 0m,
                             ["AnnualSalary"] = input.Employee.AnnualSalary,
-                            ["VehicleKm"] = input.Allowances.VehicleKm,
-                            ["VehicleType"] = input.Allowances.VehicleType,
-                            ["FirstAidRequired"] = input.Allowances.FirstAidRequired,
+                            ["VehicleKm"] = appliesDailyAllowances ? input.Allowances.VehicleKm : 0m,
+                            ["VehicleType"] = appliesDailyAllowances ? input.Allowances.VehicleType : "none",
+                            ["FirstAidRequired"] = appliesDailyAllowances && input.Allowances.FirstAidRequired,
                             ["IsOSHC"] = input.Allowances.IsOshc,
-                            ["LaundryRequired"] = input.Allowances.LaundryRequired,
+                            ["LaundryRequired"] = appliesDailyAllowances && input.Allowances.LaundryRequired,
                             ["LaundryRequiresIroning"] = input.Allowances.LaundryRequiresIroning,
-                            ["MealAllowanceRequired"] = input.Allowances.MealAllowanceRequired,
-                            ["ExcessFaresRequired"] = input.Allowances.ExcessFaresRequired,
-                            ["EducationalLeaderDaysPerWeek"] = input.Allowances.EducationalLeaderDaysPerWeek,
+                            ["MealAllowanceRequired"] = appliesDailyAllowances && input.Allowances.MealAllowanceRequired,
+                            ["ExcessFaresRequired"] = appliesDailyAllowances && input.Allowances.ExcessFaresRequired,
+                            ["EducationalLeaderDaysPerWeek"] = appliesDailyAllowances ? input.Allowances.EducationalLeaderDaysPerWeek : 0m,
                             ["AllPurposeAllowanceHourly"] = input.Employee.AllPurposeAllowanceHourly
                         }
                     };
 
                     requests.Add(request);
+                    if (appliesDailyAllowances) allowancesAppliedForDay = true;
+                    paidHoursBeforeSegmentInShift += paidHours;
                     weeklyHoursBefore += paidHours;
                 }
             }
         }
 
         return requests;
+    }
+
+    private static PayRunRequest BuildLeaveRequest(PayRunInput input, PayRunDay day, int segmentIndex, decimal weeklyHoursBefore)
+    {
+        return new PayRunRequest
+        {
+            EmployeeReference = input.EmployeeReference,
+            PayPeriodReference = input.PayPeriodReference,
+            Parameters = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["SegmentId"] = $"SEG-{segmentIndex:000}",
+                ["SourceShiftStartLocal"] = "",
+                ["SourceShiftEndLocal"] = "",
+                ["SegmentStartLocal"] = day.Date.ToDateTime(TimeOnly.MinValue).ToString("O"),
+                ["SegmentEndLocal"] = day.Date.ToDateTime(TimeOnly.MinValue).AddHours((double)day.LeaveHours).ToString("O"),
+                ["ClassificationCode"] = input.Employee.ClassificationCode,
+                ["EmploymentCategory"] = input.Employee.EmploymentCategory,
+                ["EmploymentProfileCode"] = input.Employee.EmploymentProfileCode,
+                ["DayType"] = day.DayType,
+                ["ResolvedDayType"] = day.DayType,
+                ["ShiftTag"] = "leave",
+                ["HasEvidenceReference"] = true,
+                ["WorkedHours"] = 0m,
+                ["RawShiftHours"] = 0m,
+                ["PaidHours"] = day.LeaveHours,
+                ["PaidHoursBeforeSegmentInShift"] = 0m,
+                ["WeeklyHoursBeforeShift"] = weeklyHoursBefore,
+                ["ContractedWeeklyHours"] = input.Employee.ContractedWeeklyHours,
+                ["ShiftStartMinutes"] = 0m,
+                ["ShiftEndMinutes"] = 0m,
+                ["IsShiftworker"] = input.Employee.EmploymentProfileCode.Contains("SHIFT", StringComparison.OrdinalIgnoreCase) || input.Employee.EmploymentProfileCode.Contains("NIGHT", StringComparison.OrdinalIgnoreCase),
+                ["IsPermanentNightShift"] = input.Employee.EmploymentProfileCode.Contains("PERM_NIGHT", StringComparison.OrdinalIgnoreCase),
+                ["IsLeave"] = true,
+                ["LeaveType"] = day.LeaveType,
+                ["LeaveHours"] = day.LeaveHours,
+                ["LeavePenaltyMultiplier"] = day.LeavePenaltyMultiplier,
+                ["IsFirstPayableSegmentForDay"] = false,
+                ["PayableDayWorkedHours"] = 0m,
+                ["IsPublicHolidayFromCalendar"] = false,
+                ["IsActualPublicHoliday"] = day.ActualPublicHoliday,
+                ["IsSubstitutedPublicHoliday"] = day.SubstitutedPublicHoliday,
+                ["IsPartDayPublicHoliday"] = IsPartDayPublicHoliday(day),
+                ["PublicHolidayId"] = day.PublicHolidayId,
+                ["HasPublicHolidayElectionEvidence"] = !string.IsNullOrWhiteSpace(day.PublicHolidayElectionEvidence),
+                ["UnpaidMealBreakMinutes"] = 0m,
+                ["PaidMealBreakMinutes"] = 0m,
+                ["MealBreakInterrupted"] = false,
+                ["RequiredToRemainOnPremises"] = false,
+                ["PaidRestPauseCount"] = 0m,
+                ["RestHoursSincePreviousShift"] = 999m,
+                ["BrokenShiftCount"] = 0m,
+                ["BrokenShiftSpreadHours"] = 0m,
+                ["WorkedHoursBeyondBrokenSpreadCap"] = 0m,
+                ["OutsideOrdinarySpanHours"] = 0m,
+                ["PartTimeOutsideRegularPatternHours"] = 0m,
+                ["MissedMealPenaltyHours"] = 0m,
+                ["HigherDutiesHours"] = 0m,
+                ["HigherDutiesRate"] = 0m,
+                ["OpeningToilBalanceHours"] = input.Employee.OpeningToilBalanceHours,
+                ["ToilTakenHours"] = 0m,
+                ["ForceToilPayoutHours"] = 0m,
+                ["AnnualSalary"] = input.Employee.AnnualSalary,
+                ["VehicleKm"] = 0m,
+                ["VehicleType"] = "none",
+                ["FirstAidRequired"] = false,
+                ["IsOSHC"] = false,
+                ["LaundryRequired"] = false,
+                ["LaundryRequiresIroning"] = false,
+                ["MealAllowanceRequired"] = false,
+                ["ExcessFaresRequired"] = false,
+                ["EducationalLeaderDaysPerWeek"] = 0m,
+                ["AllPurposeAllowanceHourly"] = input.Employee.AllPurposeAllowanceHourly
+            }
+        };
     }
 
     private decimal ResolveHigherDutiesRate(PayRunInput input, PayRunShift shift)
