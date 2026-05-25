@@ -141,7 +141,26 @@ public static class Ma000120InterpretationBuilder
     {
         List<string> dayValues = dayTypes.Contains("everyday")
             ? ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
-            : dayTypes;
+            : dayTypes
+                .SelectMany(ToDayValues)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+        var evidence = new List<ConditionEvidence>
+        {
+            new() { Field = "trigger", Text = evidenceText, Source = "ma000120_deterministic_template" },
+            new() { Field = "clause", Text = clause, Source = "award_clause_reference" }
+        };
+
+        foreach (var field in defaultedFields ?? [])
+        {
+            evidence.Add(new ConditionEvidence
+            {
+                Field = field,
+                Text = "Defaulted by MA000120 acceptance baseline where source text is silent.",
+                Source = "domain_default"
+            });
+        }
 
         return new NormalisedSourceRow
         {
@@ -165,14 +184,19 @@ public static class Ma000120InterpretationBuilder
                 Trigger = trigger,
                 Basis = basis,
                 DefaultedFields = defaultedFields ?? [],
-                Evidence =
-                [
-                    new ConditionEvidence { Field = "trigger", Text = evidenceText, Source = "ma000120_deterministic_template" },
-                    new ConditionEvidence { Field = "clause", Text = clause, Source = "award_clause_reference" }
-                ]
+                Evidence = evidence
             }
         };
     }
+
+    private static IEnumerable<string> ToDayValues(string dayType) => dayType.ToLowerInvariant() switch
+    {
+        "weekday" => ["monday", "tuesday", "wednesday", "thursday", "friday"],
+        "weekend" => ["saturday", "sunday"],
+        "saturday" => ["saturday"],
+        "sunday" => ["sunday"],
+        _ => []
+    };
 
     private static List<ClassificationRate> BuildClassifications() =>
     [
@@ -235,7 +259,7 @@ public static class Ma000120InterpretationBuilder
 
     private static string InferType(string name)
     {
-        if (name.StartsWith("Is") || name.StartsWith("Has") || name.EndsWith("Required") || name.Contains("Interrupted") || name.Contains("Remain")) return "bool";
+        if (name.StartsWith("Is") || name.StartsWith("Has") || name.EndsWith("Required") || name.Contains("Requires") || name.Contains("Interrupted") || name.Contains("Remain")) return "bool";
         if (name.Contains("Code") || name.Contains("Category") || name.Contains("Type") || name.Contains("Tag") || name.Contains("Profile")) return "string";
         return "decimal";
     }

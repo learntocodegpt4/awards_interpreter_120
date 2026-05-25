@@ -158,7 +158,8 @@ public sealed class GovernedRuleCompiler
 
     private static readonly HashSet<string> AllowedHourTypes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "ordinary", "overtime", "on_call", "recall", "sleepover", "any"
+        "ordinary", "ordinary_hours", "overtime", "on_call", "recall", "sleepover", "public_holiday",
+        "toil", "insufficient_rest", "annual_leave_loading", "manual_review_block", "allowance", "any"
     };
 
     private static readonly HashSet<string> AllowedShiftTypes = new(StringComparer.OrdinalIgnoreCase)
@@ -169,7 +170,8 @@ public sealed class GovernedRuleCompiler
     private static readonly HashSet<string> AllowedPaymentBasis = new(StringComparer.OrdinalIgnoreCase)
     {
         "per_hour", "per_day", "per_week", "per_shift", "per_event", "per_meal", "per_occasion",
-        "per_24h_or_part", "per_annum", "percentage_of_base", "per_km"
+        "per_24h_or_part", "per_annum", "percentage_of_base", "per_km", "per_trigger",
+        "per_overtime_hour", "per_affected_hour", "per_leave_hour", "per_blocked_line"
     };
 
     private static readonly HashSet<string> ForbiddenConditionKeys = new(StringComparer.OrdinalIgnoreCase)
@@ -179,6 +181,42 @@ public sealed class GovernedRuleCompiler
 
     private static readonly Dictionary<string, string[]> TriggerRuleIds = new(StringComparer.OrdinalIgnoreCase)
     {
+        ["ordinary_hours"] =
+        [
+            "NORM_PENALTY_BASE_RATE",
+            "PH_RESOLVE_IS_PUBLIC_HOLIDAY",
+            "PH_RESOLVE_DAY_TYPE",
+            "MIN_WEEKEND_PUBLIC_HOLIDAY_4H",
+            "MIN_WEEKDAY_PART_TIME_CASUAL_2H",
+            "OT_DAILY_EXCESS_HOURS",
+            "OT_WEEKLY_EXCESS_HOURS",
+            "OT_OUTSIDE_SPAN_HOURS",
+            "OT_PART_TIME_PATTERN_EXCESS",
+            "OT_BROKEN_SHIFT_SPREAD_EXCESS",
+            "OT_COMPOSITE_WEEKDAY_OVERTIME_HOURS",
+            "PAY_ORDINARY_HOURS",
+            "PAY_SHIFTWORK_MULTIPLIER",
+            "PAY_SHIFTWORK_AMOUNT",
+            "PAY_SATURDAY_SHIFTWORKER_AMOUNT",
+            "PAY_SUNDAY_AMOUNT"
+        ],
+        ["overtime"] =
+        [
+            "PAY_OVERTIME_FIRST_TWO_MULTIPLIER",
+            "PAY_OVERTIME_AFTER_TWO_MULTIPLIER",
+            "PAY_OVERTIME_FIRST_TWO_AMOUNT",
+            "PAY_OVERTIME_AFTER_TWO_AMOUNT"
+        ],
+        ["allowance"] =
+        [
+            "ALLOW_BROKEN_SHIFT_AMOUNT",
+            "ALLOW_LAUNDRY_AMOUNT",
+            "ALLOW_FIRST_AID_AMOUNT",
+            "ALLOW_MEAL_AMOUNT",
+            "ALLOW_EXCESS_FARES_AMOUNT",
+            "ALLOW_VEHICLE_AMOUNT",
+            "ALLOW_EDUCATIONAL_LEADER_AMOUNT"
+        ],
         ["first_aid"] = ["ALLOW_FIRST_AID_AMOUNT"],
         ["laundry"] = ["ALLOW_LAUNDRY_AMOUNT"],
         ["meal"] = ["ALLOW_MEAL_AMOUNT"],
@@ -187,7 +225,11 @@ public sealed class GovernedRuleCompiler
         ["vehicle"] = ["ALLOW_VEHICLE_AMOUNT"],
         ["educational_leader"] = ["ALLOW_EDUCATIONAL_LEADER_AMOUNT"],
         ["broken_shift"] = ["ALLOW_BROKEN_SHIFT_AMOUNT"],
-        ["public_holiday"] = ["NORM_PENALTY_BASE_RATE", "PH_RESOLVE_IS_PUBLIC_HOLIDAY", "PH_RESOLVE_DAY_TYPE", "PAY_PUBLIC_HOLIDAY_AMOUNT"]
+        ["public_holiday"] = ["PAY_PUBLIC_HOLIDAY_AMOUNT"],
+        ["toil"] = ["TOIL_ELIGIBLE", "TOIL_ACCRUAL_HOURS", "TOIL_CLOSING_BALANCE"],
+        ["insufficient_rest"] = ["OT_INSUFFICIENT_REST_TRIGGER", "OT_INSUFFICIENT_REST_HOURS"],
+        ["annual_leave_loading"] = ["LEAVE_ANNUAL_BASE_AMOUNT", "LEAVE_ANNUAL_LOADING_AMOUNT"],
+        ["manual_review_block"] = ["PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS"]
     };
 
     public RuleSetVersion CompilePublishedSnapshot(RuleCompilationRequest request)
@@ -196,7 +238,7 @@ public sealed class GovernedRuleCompiler
         if (diagnostics.Any(d => d.Severity.Equals("error", StringComparison.OrdinalIgnoreCase)))
             throw new RuleCompilationException(diagnostics);
 
-        var baseline = BuildMa000120BaselineLibrary(request.EffectiveFrom);
+        var baseline = BuildMa000120BaselineLibrary(request.EffectiveFrom, request.PublishedAtUtc);
         var selectedRules = SelectRules(request, baseline);
         var library = new GovernedExpressionLibrary
         {
@@ -275,13 +317,13 @@ public sealed class GovernedRuleCompiler
         return diagnostics;
     }
 
-    private static GovernedExpressionLibrary BuildMa000120BaselineLibrary(DateOnly effectiveFrom)
+    private static GovernedExpressionLibrary BuildMa000120BaselineLibrary(DateOnly effectiveFrom, DateTimeOffset publishedAtUtc)
     {
         var snapshot = new AwardSourceSnapshot
         {
             AwardCode = "MA000120",
             OnlineUrl = "compiled-semantic-rows://MA000120",
-            RetrievedAtUtc = DateTimeOffset.UtcNow
+            RetrievedAtUtc = publishedAtUtc
         };
         var document = new ParsedAwardDocument { AwardCode = "MA000120", AwardTitle = "Children's Services Award 2010" };
         var interpretation = Ma000120InterpretationBuilder.BuildInterpretation(snapshot, document);
@@ -324,6 +366,7 @@ public sealed class GovernedRuleCompiler
 
         if (!condition.EntityType.Equals("allowance", StringComparison.OrdinalIgnoreCase) &&
             !condition.EntityType.Equals("penalty", StringComparison.OrdinalIgnoreCase) &&
+            !condition.EntityType.Equals("pay_rule", StringComparison.OrdinalIgnoreCase) &&
             !condition.EntityType.Equals("pay", StringComparison.OrdinalIgnoreCase))
             diagnostics.Add(new("ENTITY_TYPE_UNSUPPORTED", $"Unsupported entity_type '{condition.EntityType}'.", row.RowId));
 
@@ -379,7 +422,7 @@ public sealed class GovernedRuleCompiler
 
     private static void ValidateCompiledExpressions(RuleCompilationRequest request, List<RuleCompilerDiagnostic> diagnostics)
     {
-        var baseline = BuildMa000120BaselineLibrary(request.EffectiveFrom);
+        var baseline = BuildMa000120BaselineLibrary(request.EffectiveFrom, request.PublishedAtUtc);
         var selectedRules = SelectRules(request, baseline);
         var expressionValidator = new RuleExpressionValidator(baseline.Parameters, selectedRules);
 
@@ -404,7 +447,7 @@ public sealed class GovernedRuleCompiler
                     throw new InvalidOperationException($"Baseline rule '{ruleId}' is not defined.");
 
                 if (selected.ContainsKey(ruleId))
-                    throw new RuleCompilationException([new("DUPLICATE_RULE_MAPPING", $"Multiple source rows map to governed rule '{ruleId}'.", row.RowId)]);
+                    continue;
 
                 selected[ruleId] = CloneRule(baselineRule, row, request.EffectiveFrom);
             }
