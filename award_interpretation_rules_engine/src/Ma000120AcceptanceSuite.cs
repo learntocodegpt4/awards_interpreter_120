@@ -282,18 +282,21 @@ public static class Ma000120AcceptanceSuite
     private static string ProjectRoot()
     {
         var current = Directory.GetCurrentDirectory();
-        while (!File.Exists(Path.Combine(current, "AwardInterpretationRulesEngine.csproj")))
+        while (true)
         {
+            var projectFile = Path.Combine(current, "AwardInterpretationRulesEngine.csproj");
+            if (File.Exists(projectFile))
+                return current;
+
             var nestedProject = Path.Combine(current, "award_interpretation_rules_engine", "AwardInterpretationRulesEngine.csproj");
             if (File.Exists(nestedProject))
-                return Path.GetDirectoryName(nestedProject)!;
+                return Path.GetDirectoryName(nestedProject)
+                    ?? throw new InvalidOperationException("Could not resolve AwardInterpretationRulesEngine project directory.");
 
             var parent = Directory.GetParent(current)?.FullName;
             if (parent is null)
                 throw new InvalidOperationException("Could not locate AwardInterpretationRulesEngine.csproj.");
             current = parent;
         }
-
-        return current;
     }
 }

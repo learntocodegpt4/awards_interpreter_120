@@ -43,6 +43,26 @@ calculation coverage for sample parity, ordinary time, overtime, allowances,
 public holidays, TOIL, rest/fatigue, leave loading, blocked exports, award
 references, and rule traces.
 
+## Run CI-equivalent quality gates
+
+From the repository root:
+
+```bash
+bash scripts/run-ci.sh
+```
+
+For targeted iteration:
+
+```bash
+dotnet run --project award_interpretation_rules_engine.tests/AwardInterpretationRulesEngine.Tests.csproj --configuration Release
+dotnet test award_interpretation_rules_engine.runtime_tests/AwardInterpretationRulesEngine.Tests.csproj --configuration Release --logger "console;verbosity=normal"
+dotnet run --project award_interpretation_rules_engine/AwardInterpretationRulesEngine.csproj --configuration Release -- --acceptance
+```
+
+The first command includes parser unit tests, parser golden corpus tests, and
+compiler validation gates for review state, trace metadata, unsupported
+conditions, unsafe raw expressions, and effective-date safety.
+
 ## Configuration
 
 Copy `appsettings.example.json` and set:

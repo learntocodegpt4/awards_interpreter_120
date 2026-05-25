@@ -104,7 +104,7 @@ public sealed class OnlineAwardHtmlParser
 
         foreach (var clauseNumber in new[] { "1", "2", "3", "4", "10", "13", "14", "15", "18", "21", "22", "23", "25", "27" })
         {
-            var clause = ExtractClause(text, clauseNumber);
+            var clause = ExtractClause(document, text, clauseNumber);
             if (clause is not null) parsed.Clauses.Add(clause);
         }
 
@@ -120,7 +120,38 @@ public sealed class OnlineAwardHtmlParser
         return match.Success ? Normalise(match.Value) : "";
     }
 
-    private static AwardClause? ExtractClause(string text, string clauseNumber)
+    private static AwardClause? ExtractClause(AngleSharp.Dom.IDocument document, string text, string clauseNumber)
+    {
+        var heading = document.QuerySelectorAll("h1,h2,h3,h4,h5,h6")
+            .FirstOrDefault(node => IsClauseHeading(node.TextContent, clauseNumber));
+
+        if (heading is not null)
+        {
+            var title = StripClauseNumber(heading.TextContent);
+            var parts = new List<string> { title };
+
+            for (var sibling = heading.NextElementSibling; sibling is not null; sibling = sibling.NextElementSibling)
+            {
+                if (IsAnyClauseHeading(sibling.TextContent) || IsHeadingElement(sibling.TagName))
+                    break;
+
+                var content = NormaliseMultiline(sibling.TextContent);
+                if (!string.IsNullOrWhiteSpace(content))
+                    parts.Add(content);
+            }
+
+            return new AwardClause
+            {
+                ClauseNumber = clauseNumber,
+                Heading = title.Length > 160 ? title[..160] : title,
+                Text = string.Join('\n', parts)
+            };
+        }
+
+        return ExtractClauseFromText(text, clauseNumber);
+    }
+
+    private static AwardClause? ExtractClauseFromText(string text, string clauseNumber)
     {
         var pattern = $@"(?ms)(^|\n)\s*{Regex.Escape(clauseNumber)}\.\s*(?<body>.*?)(?=\n\s*(?:\d+[A-Z]?\.|Schedule\s+[A-Z])\s+|$)";
         var match = Regex.Match(text, pattern);
@@ -135,6 +166,18 @@ public sealed class OnlineAwardHtmlParser
             Text = body
         };
     }
+
+    private static bool IsClauseHeading(string value, string clauseNumber)
+        => Regex.IsMatch(Normalise(value), $@"^{Regex.Escape(clauseNumber)}\.\s+");
+
+    private static bool IsAnyClauseHeading(string value)
+        => Regex.IsMatch(Normalise(value), @"^\d+[A-Z]?\.\s+");
+
+    private static bool IsHeadingElement(string tagName)
+        => tagName.Length == 2 && tagName.StartsWith('H') && char.IsDigit(tagName[1]);
+
+    private static string StripClauseNumber(string value)
+        => Regex.Replace(Normalise(value), @"^\d+[A-Z]?\.\s+", "");
 
     private static string Normalise(string value) => Regex.Replace(value, @"\s+", " ").Trim();
 
