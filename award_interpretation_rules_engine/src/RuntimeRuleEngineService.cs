@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -64,6 +65,7 @@ public sealed class PayLineCalculatedEvent
 public sealed class RuleEngineRuntimeOptions
 {
     public EngineOptions Engine { get; set; } = new();
+    [Obsolete("Runtime calculations require an explicit approved rule_set_version_id.")]
     public bool RequireExplicitRuleSetVersion { get; set; } = true;
 }
 
@@ -77,6 +79,42 @@ public interface IRuntimeRuleEngineService
 {
     Task<RuleCalculationResult> CalculateAsync(RuleCalculationRequest request, CancellationToken cancellationToken = default);
     Task<RuleCalculationResult> RecalculateAsync(RuleCalculationRequest request, CancellationToken cancellationToken = default);
+}
+
+public interface ITimesheetSegmentNormaliser
+{
+    IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library);
+}
+
+public sealed class TimesheetSegmentNormaliser : ITimesheetSegmentNormaliser
+{
+    public IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library)
+        => new TimesheetNormaliser(library).BuildSegmentRequests(input);
+}
+
+public interface IGovernedRuleCalculator
+{
+    PayRunResult Calculate(GovernedExpressionLibrary library, EngineOptions options, string ruleSetVersionId, PayRunRequest request);
+}
+
+public sealed class DynamicExpressoRuleCalculator : IGovernedRuleCalculator
+{
+    private readonly IExpressionParameterBinder _parameterBinder;
+    private readonly ILogger<DynamicExpressoRuleCalculator> _logger;
+
+    public DynamicExpressoRuleCalculator(
+        IExpressionParameterBinder? parameterBinder = null,
+        ILogger<DynamicExpressoRuleCalculator>? logger = null)
+    {
+        _parameterBinder = parameterBinder ?? new GovernedExpressionParameterBinder();
+        _logger = logger ?? NullLogger<DynamicExpressoRuleCalculator>.Instance;
+    }
+
+    public PayRunResult Calculate(GovernedExpressionLibrary library, EngineOptions options, string ruleSetVersionId, PayRunRequest request)
+    {
+        _logger.LogDebug("Evaluating segment {SegmentId} with rule version {RuleSetVersionId}.", request.Parameters.GetValueOrDefault("SegmentId"), ruleSetVersionId);
+        return new GovernedAwardRuleEngine(library, options, ruleSetVersionId, _parameterBinder).Calculate(request);
+    }
 }
 
 public sealed class InMemoryRuleSnapshotStore : IRuleSnapshotStore
@@ -130,15 +168,21 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
 {
     private readonly IRuleSnapshotStore _snapshotStore;
     private readonly RuleEngineRuntimeOptions _options;
+    private readonly ITimesheetSegmentNormaliser _segmentNormaliser;
+    private readonly IGovernedRuleCalculator _ruleCalculator;
     private readonly ILogger<RuntimeRuleEngineService> _logger;
 
     public RuntimeRuleEngineService(
         IRuleSnapshotStore snapshotStore,
         RuleEngineRuntimeOptions options,
+        ITimesheetSegmentNormaliser? segmentNormaliser = null,
+        IGovernedRuleCalculator? ruleCalculator = null,
         ILogger<RuntimeRuleEngineService>? logger = null)
     {
         _snapshotStore = snapshotStore;
         _options = options;
+        _segmentNormaliser = segmentNormaliser ?? new TimesheetSegmentNormaliser();
+        _ruleCalculator = ruleCalculator ?? new DynamicExpressoRuleCalculator();
         _logger = logger ?? NullLogger<RuntimeRuleEngineService>.Instance;
     }
 
@@ -153,7 +197,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         var result = NewResult(request);
         var workDate = ResolveWorkDate(request.PayRun);
 
-        if (_options.RequireExplicitRuleSetVersion && string.IsNullOrWhiteSpace(request.RuleSetVersionId))
+        if (string.IsNullOrWhiteSpace(request.RuleSetVersionId))
         {
             result.ComplianceExceptions.Add(SystemException("RULE_VERSION_REQUIRED", "A rule_set_version_id is required for runtime calculation."));
             return result;
@@ -162,10 +206,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         RuleSetVersion snapshot;
         try
         {
-            snapshot = string.IsNullOrWhiteSpace(request.RuleSetVersionId)
-                ? await ResolveSnapshotByWorkDateAsync(request, workDate, cancellationToken)
-                : await _snapshotStore.GetApprovedSnapshotAsync(request.TenantId, request.AwardCode, request.RuleSetVersionId, cancellationToken);
-
+            snapshot = await _snapshotStore.GetApprovedSnapshotAsync(request.TenantId, request.AwardCode, request.RuleSetVersionId, cancellationToken);
             ValidateSnapshot(snapshot, request, workDate);
         }
         catch (RuleSnapshotValidationException ex)
@@ -176,13 +217,18 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         }
 
         var library = snapshot.RulesJson;
-        var normaliser = new TimesheetNormaliser(library);
-        var segmentRequests = normaliser.BuildSegmentRequests(request.PayRun);
-        var engine = new GovernedAwardRuleEngine(library, _options.Engine, snapshot.RuleSetVersionId);
+        var segmentRequests = _segmentNormaliser.BuildSegmentRequests(request.PayRun, library);
+        _logger.LogDebug(
+            "Normalised {SegmentCount} pay segments for tenant {TenantId}, award {AwardCode}, rule version {RuleSetVersionId}, correlation {CorrelationId}.",
+            segmentRequests.Count,
+            request.TenantId,
+            request.AwardCode,
+            snapshot.RuleSetVersionId,
+            request.CorrelationId);
 
         foreach (var segmentRequest in segmentRequests)
         {
-            var segmentResult = engine.Calculate(segmentRequest);
+            var segmentResult = _ruleCalculator.Calculate(library, _options.Engine, snapshot.RuleSetVersionId, segmentRequest);
             AppendSegment(result.Calculation, segmentResult);
         }
 
@@ -209,19 +255,13 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         return result;
     }
 
-    private async Task<RuleSetVersion> ResolveSnapshotByWorkDateAsync(RuleCalculationRequest request, DateOnly workDate, CancellationToken cancellationToken)
-    {
-        var snapshot = await _snapshotStore.FindApprovedSnapshotAsync(request.TenantId, request.AwardCode, workDate, cancellationToken);
-        if (snapshot is null)
-            throw new RuleSnapshotValidationException("", $"No approved rule snapshot was effective for award '{request.AwardCode}' on {workDate:yyyy-MM-dd}.");
-
-        return snapshot;
-    }
-
     private static void ValidateSnapshot(RuleSetVersion snapshot, RuleCalculationRequest request, DateOnly workDate)
     {
         if (!IsExecutableStatus(snapshot.Status))
             throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Only approved or published rule snapshots can be evaluated.");
+
+        if (!snapshot.RuleSetVersionId.Equals(request.RuleSetVersionId, StringComparison.OrdinalIgnoreCase))
+            throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Snapshot rule_set_version_id does not match the calculation request.");
 
         if (!snapshot.AwardCode.Equals(request.AwardCode, StringComparison.OrdinalIgnoreCase))
             throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Snapshot award_code does not match the calculation request.");
@@ -396,6 +436,9 @@ public static class RuleEngineServiceCollectionExtensions
         configure?.Invoke(options);
 
         services.AddSingleton(options);
+        services.TryAddSingleton<IExpressionParameterBinder, GovernedExpressionParameterBinder>();
+        services.TryAddSingleton<ITimesheetSegmentNormaliser, TimesheetSegmentNormaliser>();
+        services.TryAddSingleton<IGovernedRuleCalculator, DynamicExpressoRuleCalculator>();
         services.AddSingleton<IRuleSnapshotStore, TSnapshotStore>();
         services.AddScoped<IRuntimeRuleEngineService, RuntimeRuleEngineService>();
         return services;
@@ -410,6 +453,9 @@ public static class RuleEngineServiceCollectionExtensions
         configure?.Invoke(options);
 
         services.AddSingleton(options);
+        services.TryAddSingleton<IExpressionParameterBinder, GovernedExpressionParameterBinder>();
+        services.TryAddSingleton<ITimesheetSegmentNormaliser, TimesheetSegmentNormaliser>();
+        services.TryAddSingleton<IGovernedRuleCalculator, DynamicExpressoRuleCalculator>();
         services.AddSingleton<IRuleSnapshotStore>(new InMemoryRuleSnapshotStore(snapshots));
         services.AddScoped<IRuntimeRuleEngineService, RuntimeRuleEngineService>();
         return services;
