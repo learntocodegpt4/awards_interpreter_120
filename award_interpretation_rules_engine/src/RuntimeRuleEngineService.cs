@@ -217,27 +217,35 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         }
 
         var library = snapshot.RulesJson;
-        var segmentRequests = _segmentNormaliser.BuildSegmentRequests(request.PayRun, library);
-        _logger.LogDebug(
-            "Normalised {SegmentCount} pay segments for tenant {TenantId}, award {AwardCode}, rule version {RuleSetVersionId}, correlation {CorrelationId}.",
-            segmentRequests.Count,
-            request.TenantId,
-            request.AwardCode,
-            snapshot.RuleSetVersionId,
-            request.CorrelationId);
-
-        foreach (var segmentRequest in segmentRequests)
-        {
-            var segmentResult = _ruleCalculator.Calculate(library, _options.Engine, snapshot.RuleSetVersionId, segmentRequest);
-            AppendSegment(result.Calculation, segmentResult);
-        }
-
         result.RuleSetVersionId = snapshot.RuleSetVersionId;
         result.AwardCode = snapshot.AwardCode;
         result.Calculation.RuleSetVersionId = snapshot.RuleSetVersionId;
         result.Calculation.AwardCode = snapshot.AwardCode;
         result.Calculation.EmployeeReference = request.PayRun.EmployeeReference;
         result.Calculation.PayPeriodReference = request.PayRun.PayPeriodReference;
+
+        var normalisation = new TimesheetNormaliser(library).BuildNormalisedSegments(request.PayRun);
+        _logger.LogDebug(
+            "Normalised {SegmentCount} pay segments for tenant {TenantId}, award {AwardCode}, rule version {RuleSetVersionId}, correlation {CorrelationId}.",
+            normalisation.SegmentRequests.Count,
+            request.TenantId,
+            request.AwardCode,
+            snapshot.RuleSetVersionId,
+            request.CorrelationId);
+
+        result.Calculation.Warnings.AddRange(normalisation.Warnings);
+        if (normalisation.BlocksPayrollExport)
+        {
+            FinaliseAggregate(result.Calculation, request.PayRun.Employee.OpeningToilBalanceHours);
+            ProjectComplianceExceptions(result.Calculation, result.ComplianceExceptions);
+            return result;
+        }
+
+        foreach (var segmentRequest in normalisation.SegmentRequests)
+        {
+            var segmentResult = _ruleCalculator.Calculate(library, _options.Engine, snapshot.RuleSetVersionId, segmentRequest);
+            AppendSegment(result.Calculation, segmentResult);
+        }
 
         ApplyStacking(result.Calculation, result.StackingDecisions);
         ApplyAggregateExportBlocking(result.Calculation, _options.Engine.BlockPayrollExportOnErrors);

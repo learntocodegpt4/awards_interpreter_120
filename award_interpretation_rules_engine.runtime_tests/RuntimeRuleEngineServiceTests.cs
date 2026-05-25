@@ -112,7 +112,8 @@ public sealed class RuntimeRuleEngineServiceTests
     [Fact]
     public void TimesheetNormaliser_splits_cross_midnight_and_part_day_public_holiday_segments()
     {
-        var normaliser = new TimesheetNormaliser(BuildLibrary(29.52m, "2026.1"));
+        var library = BuildLibrary(29.52m, "2026.1");
+        var normaliser = new TimesheetNormaliser(library);
         var crossMidnight = new PayRunInput
         {
             EmployeeReference = "EMP-1",
@@ -150,6 +151,136 @@ public sealed class RuntimeRuleEngineServiceTests
         Assert.Equal("public_holiday", publicHolidaySegments[1].Parameters["ResolvedDayType"]);
         Assert.Equal(1m, publicHolidaySegments[0].Parameters["PaidHours"]);
         Assert.Equal(3m, publicHolidaySegments[1].Parameters["PaidHours"]);
+        AssertContainsRequiredParameters(library, normaliser.BuildNormalisedSegments(partDayPublicHoliday));
+    }
+
+    [Fact]
+    public void TimesheetNormaliser_emits_deterministic_context_for_weekend_recall_on_call_overnight_and_breaks()
+    {
+        var library = BuildLibrary(29.52m, "2026.1");
+        var normaliser = new TimesheetNormaliser(library);
+        var input = new PayRunInput
+        {
+            EmployeeReference = "EMP-CTX",
+            PayPeriodReference = "P-CTX",
+            Days =
+            [
+                new PayRunDay
+                {
+                    Date = new DateOnly(2026, 5, 30),
+                    DayType = "saturday",
+                    RosterContext = "published_roster",
+                    Shifts =
+                    [
+                        new PayRunShift
+                        {
+                            Start = "22:00",
+                            End = "02:00",
+                            SegmentKind = "recall",
+                            Tag = "on_call,recall",
+                            RosterStart = "21:30",
+                            RosterEnd = "01:30",
+                            Breaks =
+                            [
+                                new PayRunBreak { Start = "23:00", End = "23:15", Type = "rest", Paid = true },
+                                new PayRunBreak { Start = "00:00", End = "00:30", Type = "meal", Paid = false }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        };
+
+        var first = normaliser.BuildNormalisedSegments(input);
+        var second = normaliser.BuildNormalisedSegments(input);
+
+        Assert.Empty(first.Warnings);
+        Assert.Equal(2, first.SegmentRequests.Count);
+        Assert.Equal(
+            first.SegmentRequests.Select(r => r.Parameters["SegmentStartLocal"]).ToArray(),
+            second.SegmentRequests.Select(r => r.Parameters["SegmentStartLocal"]).ToArray());
+
+        var firstParameters = first.SegmentRequests[0].Parameters;
+        var secondParameters = first.SegmentRequests[1].Parameters;
+        Assert.Equal("recall", firstParameters["SegmentKind"]);
+        Assert.True((bool)firstParameters["IsOnCall"]!);
+        Assert.True((bool)firstParameters["IsRecall"]!);
+        Assert.True((bool)firstParameters["IsOvernight"]!);
+        Assert.Equal("saturday", firstParameters["DayType"]);
+        Assert.Equal("sunday", secondParameters["DayType"]);
+        Assert.Equal("published_roster", firstParameters["RosterContext"]);
+        Assert.Equal(15m, firstParameters["TotalPaidBreakMinutes"]);
+        Assert.Equal(30m, firstParameters["TotalUnpaidBreakMinutes"]);
+        Assert.Equal(15m, firstParameters["SegmentPaidBreakMinutes"]);
+        Assert.Equal(0m, secondParameters["SegmentPaidBreakMinutes"]);
+        Assert.Equal(3.5m, first.SegmentRequests.Sum(r => (decimal)r.Parameters["PaidHours"]!));
+        AssertContainsRequiredParameters(library, first);
+    }
+
+    [Fact]
+    public void TimesheetNormaliser_calculates_rest_split_shift_and_unpaid_break_deductions()
+    {
+        var library = BuildLibrary(29.52m, "2026.1");
+        var normaliser = new TimesheetNormaliser(library);
+        var input = new PayRunInput
+        {
+            EmployeeReference = "EMP-SPLIT",
+            PayPeriodReference = "P-SPLIT",
+            Days =
+            [
+                new PayRunDay
+                {
+                    Date = new DateOnly(2026, 5, 25),
+                    DayType = "weekday",
+                    Shifts =
+                    [
+                        new PayRunShift
+                        {
+                            Start = "08:00",
+                            End = "16:30",
+                            Breaks = [new PayRunBreak { Start = "12:00", End = "12:30", Type = "meal", Paid = false }]
+                        },
+                        new PayRunShift { Start = "21:30", End = "22:30" }
+                    ]
+                }
+            ]
+        };
+
+        var result = normaliser.BuildNormalisedSegments(input);
+
+        Assert.Empty(result.Warnings);
+        Assert.Equal(3, result.SegmentRequests.Count);
+        Assert.Equal(8m, result.SegmentRequests.Take(2).Sum(r => (decimal)r.Parameters["PaidHours"]!));
+        Assert.All(result.SegmentRequests.Take(2), request => Assert.Equal(30m, request.Parameters["TotalUnpaidBreakMinutes"]));
+        Assert.Equal(5m, result.SegmentRequests[2].Parameters["RestHoursSincePreviousShift"]);
+        Assert.All(result.SegmentRequests, request => Assert.Equal(2, request.Parameters["BrokenShiftCount"]));
+        Assert.All(result.SegmentRequests, request => Assert.Equal(14.5m, request.Parameters["BrokenShiftSpreadHours"]));
+        Assert.Equal(1m, result.SegmentRequests[2].Parameters["WorkedHoursBeyondBrokenSpreadCap"]);
+        AssertContainsRequiredParameters(library, result);
+    }
+
+    [Fact]
+    public async Task CalculateAsync_blocks_invalid_or_incomplete_timesheets_before_rule_evaluation()
+    {
+        var snapshot = Snapshot("MA000120-2026-v1", new DateOnly(2026, 1, 1), null, 29.52m, "2026.1");
+        var service = new RuntimeRuleEngineService(
+            new InMemoryRuleSnapshotStore([snapshot]),
+            new RuleEngineRuntimeOptions());
+        var input = StandardPayRun(new DateOnly(2026, 5, 25));
+        input.Days[0].Shifts[0].Start = "";
+
+        var result = await service.CalculateAsync(new RuleCalculationRequest
+        {
+            TenantId = "tenant-a",
+            AwardCode = "MA000120",
+            RuleSetVersionId = snapshot.RuleSetVersionId,
+            PayRun = input
+        });
+
+        var exception = Assert.Single(result.ComplianceExceptions, e => e.RuleId == "TIMESHEET_SHIFT_TIME_REQUIRED");
+        Assert.True(exception.BlocksPayrollExport);
+        Assert.Empty(result.Calculation.PayrollLines);
+        Assert.Empty(result.Calculation.RuleTrace);
     }
 
     [Fact]
@@ -493,6 +624,15 @@ public sealed class RuntimeRuleEngineServiceTests
         OutputType = "decimal",
         Action = "payroll_line"
     };
+
+    private static void AssertContainsRequiredParameters(GovernedExpressionLibrary library, TimesheetNormalisationResult result)
+    {
+        Assert.All(result.SegmentRequests, request =>
+        {
+            foreach (var parameter in library.Parameters.Where(p => p.Required))
+                Assert.True(request.Parameters.ContainsKey(parameter.Name), $"Missing DynamicExpresso parameter '{parameter.Name}'.");
+        });
+    }
 
     private static PayRunInput StandardPayRun(DateOnly date) => new()
     {

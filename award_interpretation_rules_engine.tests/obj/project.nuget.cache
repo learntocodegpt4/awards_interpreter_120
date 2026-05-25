@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "dgSpecHash": "kbb9eSRacoj3Bp06ra9y7trB1oimKodUZ2dBaNiYwGsZy8yuh1MwVm2QzzWPrFs28TcD1gvo/71FcU1QsD+BIA==",
+  "success": true,
+  "projectFilePath": "/workspace/award_interpretation_rules_engine.tests/AwardInterpretationRulesEngine.Tests.csproj",
+  "expectedPackageFiles": [
+    "/home/ubuntu/.nuget/packages/anglesharp/1.4.0/anglesharp.1.4.0.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/dynamicexpresso.core/2.19.3/dynamicexpresso.core.2.19.3.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/microsoft.csharp/4.7.0/microsoft.csharp.4.7.0.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/microsoft.extensions.dependencyinjection.abstractions/10.0.8/microsoft.extensions.dependencyinjection.abstractions.10.0.8.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/microsoft.extensions.logging.abstractions/10.0.8/microsoft.extensions.logging.abstractions.10.0.8.nupkg.sha512",
+    "/home/ubuntu/.nuget/packages/system.diagnostics.diagnosticsource/10.0.8/system.diagnostics.diagnosticsource.10.0.8.nupkg.sha512"
+  ],
+  "logs": []
+}
