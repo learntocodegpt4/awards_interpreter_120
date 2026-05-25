@@ -1,0 +1,262 @@
+[
+  {
+    "id": "INT-GOLD-001",
+    "input": {
+      "row_id": "ma000120-first-aid",
+      "award_code": "MA000120",
+      "clause": "15.5",
+      "allowance": "First aid allowance",
+      "payment_frequency": "per week"
+    },
+    "expected": {
+      "entity_type": "allowance",
+      "trigger": "first_aid",
+      "basis": "per_week",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"],
+      "day_source": "domain_default",
+      "public_holiday": true,
+      "parse_status": "complete_defaulted"
+    }
+  },
+  {
+    "id": "INT-GOLD-002",
+    "input": {
+      "row_id": "ma000120-industry-disability",
+      "award_code": "MA000120",
+      "clause": "15.2",
+      "allowance": "Industry disability allowance",
+      "payment_frequency": "per week"
+    },
+    "expected": {
+      "trigger": "industry_disability",
+      "basis": "per_week",
+      "day_source": "domain_default",
+      "parse_status": "complete_defaulted"
+    }
+  },
+  {
+    "id": "INT-GOLD-003",
+    "input": {
+      "row_id": "ma000120-leading-hand",
+      "award_code": "MA000120",
+      "clause": "15.3",
+      "allowance": "Leading hand allowance - 3-5 employees",
+      "payment_frequency": "per week"
+    },
+    "expected": {
+      "trigger": "leading_hand",
+      "basis": "per_week",
+      "employee_threshold": {"minimum": 3, "maximum": 5},
+      "parse_status": "complete_defaulted"
+    }
+  },
+  {
+    "id": "INT-GOLD-004",
+    "input": {
+      "row_id": "ma000120-on-call-mon-fri",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance - Monday to Friday",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "basis": "per_day",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday"],
+      "day_source": "explicit_text",
+      "public_holiday": false,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-005",
+    "input": {
+      "row_id": "ma000120-on-call-mon-sat",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance - Monday to Saturday",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+      "day_source": "explicit_text",
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-006",
+    "input": {
+      "row_id": "ma000120-on-call-saturday",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance - Saturday",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "days": ["saturday"],
+      "day_types": ["saturday"],
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-007",
+    "input": {
+      "row_id": "ma000120-on-call-sunday-ph",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance - Sunday or public holiday",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "days": ["sunday"],
+      "day_types": ["sunday", "public_holiday"],
+      "public_holiday": true,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-008",
+    "input": {
+      "row_id": "ma000120-on-call-24h",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance, per 24 hour period or part thereof - Sunday or public holiday",
+      "payment_frequency": "per 24 hour period or part thereof"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "basis": "per_24h_or_part",
+      "period_rounding": "started_24_hour_period_counts",
+      "days": ["sunday"],
+      "public_holiday": true,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-009",
+    "input": {
+      "row_id": "ma000120-sleepover-additional",
+      "award_code": "MA000120",
+      "clause": "15.6",
+      "allowance": "Sleepover allowance - additional to on-call allowance",
+      "payment_frequency": "per shift"
+    },
+    "expected": {
+      "trigger": "sleepover",
+      "basis": "per_shift",
+      "shift_type": "sleepover",
+      "stacking_policy": "additional_to",
+      "dependency_trigger": "on_call",
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-GOLD-010",
+    "input": {
+      "row_id": "ma000120-heat",
+      "award_code": "MA000120",
+      "clause": "15.9",
+      "allowance": "Extreme heat allowance where temperature exceeds 46 degrees Celsius",
+      "payment_frequency": "per hour"
+    },
+    "expected": {
+      "trigger": "extreme_heat",
+      "basis": "per_hour",
+      "temperature_celsius": 46.0,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-EDGE-011",
+    "input": {
+      "row_id": "clause-context-days",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance",
+      "clause_description": "The allowance applies Monday to Saturday.",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "days": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+      "day_source": "clause_context",
+      "days_evidence_source": "clause_description",
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-EDGE-012",
+    "input": {
+      "row_id": "ambiguous-on-call",
+      "award_code": "MA000120",
+      "clause": "15.4",
+      "allowance": "On-call allowance",
+      "payment_frequency": "per day"
+    },
+    "expected": {
+      "trigger": "on_call",
+      "parse_status": "manual_review",
+      "review_note_contains": "On-call day applicability is ambiguous"
+    }
+  },
+  {
+    "id": "INT-PEN-001",
+    "input": {
+      "row_id": "penalty-ordinary-rate",
+      "award_code": "MA000120",
+      "clause": "23.2",
+      "penalty_description": "Overtime - first 2 hours paid at 150% of the ordinary rate",
+      "payment_frequency": "per hour"
+    },
+    "expected": {
+      "entity_type": "penalty",
+      "trigger": "overtime",
+      "basis": "per_hour",
+      "time_condition": "first_2_hours",
+      "base_rate_reference": "ordinary_rate",
+      "is_compounding": false,
+      "multiplier": 1.5,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-PEN-002",
+    "input": {
+      "row_id": "penalty-loaded-rate",
+      "award_code": "MA000120",
+      "clause": "23.5",
+      "penalty_description": "Sunday penalty paid at 200% of the loaded rate plus applicable loadings",
+      "payment_frequency": "per hour"
+    },
+    "expected": {
+      "entity_type": "penalty",
+      "trigger": "weekend",
+      "days": ["sunday"],
+      "base_rate_reference": "loaded_rate",
+      "is_compounding": true,
+      "stacking_policy": "cumulative",
+      "multiplier": 2.0,
+      "parse_status": "complete"
+    }
+  },
+  {
+    "id": "INT-PEN-003",
+    "input": {
+      "row_id": "penalty-ambiguous",
+      "award_code": "MA000120",
+      "clause": "23.5",
+      "penalty_description": "Weekend penalty paid at the applicable rate including any loadings",
+      "payment_frequency": "per hour"
+    },
+    "expected": {
+      "entity_type": "penalty",
+      "trigger": "weekend",
+      "base_rate_reference": "manual_review_required",
+      "parse_status": "manual_review",
+      "review_note_contains": "Penalty base-rate or compounding wording is ambiguous"
+    }
+  }
+]
