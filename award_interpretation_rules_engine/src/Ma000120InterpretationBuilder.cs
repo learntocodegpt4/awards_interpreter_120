@@ -138,7 +138,7 @@ public static class Ma000120InterpretationBuilder
     {
         var rules = new List<RuleDefinition>();
 
-        Rule(string id, string phase, decimal precedence, string clause, string desc, string expr, string key, string type, string action = "set_value", string review = "auto")
+        void Rule(string id, string phase, decimal precedence, string clause, string desc, string expr, string key, string type, string action = "set_value", string review = "auto")
             => rules.Add(new RuleDefinition { RuleId = id, EvaluationPhase = phase, Precedence = precedence, ClauseReference = clause, Description = desc, Expression = expr, OutputKey = key, OutputType = type, Action = action, ManualReviewPolicy = review, EffectiveFrom = "2026-03-01" });
 
         Rule("PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PRECONDITIONS", 1, "Evidence governance",
