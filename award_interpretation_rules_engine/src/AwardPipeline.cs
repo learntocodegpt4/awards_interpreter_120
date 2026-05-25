@@ -49,6 +49,12 @@ public sealed class AwardPipeline
             aggregate.SegmentContexts.Add(segment.FinalContext);
         }
 
+        if (_settings.Engine.BlockPayrollExportOnErrors && aggregate.Warnings.Any(w => w.BlocksPayrollExport) && aggregate.PayrollLines.Count > 0)
+        {
+            aggregate.BlockedPayrollLines.AddRange(aggregate.PayrollLines.Select(l => l with { SourceBucket = "blocked_payroll_lines", Exportable = false, RequiresReview = true }));
+            aggregate.PayrollLines.Clear();
+        }
+
         aggregate.PayrollGross = Math.Round(aggregate.PayrollLines.Sum(l => l.Amount), 2, MidpointRounding.AwayFromZero);
         aggregate.AwardReferenceGross = Math.Round(aggregate.AwardReferenceLines.Sum(l => l.Amount), 2, MidpointRounding.AwayFromZero);
         aggregate.BlockedPayrollGross = Math.Round(aggregate.BlockedPayrollLines.Sum(l => l.Amount), 2, MidpointRounding.AwayFromZero);

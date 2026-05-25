@@ -10,5 +10,7 @@
   <ItemGroup>
     <PackageReference Include="DynamicExpresso.Core" Version="2.*" />
     <PackageReference Include="AngleSharp" Version="1.*" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.*" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.*" />
   </ItemGroup>
 </Project>

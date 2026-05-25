@@ -33,6 +33,16 @@ public static class Ma000120InterpretationBuilder
         return interpretation;
     }
 
+    public static GovernedExpressionLibrary BuildLibrary(AwardInterpretation interpretation)
+        => BuildLibrary(interpretation, new ReviewGateResult
+        {
+            Status = "approved_for_compilation",
+            Approved = true,
+            ApprovalId = $"{interpretation.AwardCode}-BASELINE-LIBRARY",
+            ApprovedBy = "governed_ma000120_baseline_builder",
+            ApprovedAtUtc = interpretation.Sources.FirstOrDefault()?.RetrievedAtUtc
+        });
+
     public static GovernedExpressionLibrary BuildLibrary(AwardInterpretation interpretation, ReviewGateResult gate)
     {
         if (!gate.Approved)
@@ -207,9 +217,9 @@ public static class Ma000120InterpretationBuilder
         string[] required =
         [
             "ClassificationCode", "EmploymentCategory", "EmploymentProfileCode", "DayType", "ResolvedDayType", "ShiftTag",
-            "HasEvidenceReference", "WorkedHours", "RawShiftHours", "PaidHours", "WeeklyHoursBeforeShift",
+            "HasEvidenceReference", "WorkedHours", "RawShiftHours", "PaidHours", "PaidHoursBeforeSegmentInShift", "WeeklyHoursBeforeShift",
             "ContractedWeeklyHours", "ShiftStartMinutes", "ShiftEndMinutes", "IsShiftworker", "IsPermanentNightShift",
-            "IsLeave", "LeaveType", "LeaveHours", "LeavePenaltyMultiplier",
+            "IsLeave", "LeaveType", "LeaveHours", "LeavePenaltyMultiplier", "IsFirstPayableSegmentForDay", "PayableDayWorkedHours",
             "IsPublicHolidayFromCalendar", "IsActualPublicHoliday", "IsSubstitutedPublicHoliday", "HasPublicHolidayElectionEvidence",
             "UnpaidMealBreakMinutes", "PaidMealBreakMinutes", "MealBreakInterrupted", "RequiredToRemainOnPremises",
             "PaidRestPauseCount", "RestHoursSincePreviousShift", "BrokenShiftCount", "BrokenShiftSpreadHours",
@@ -269,7 +279,7 @@ public static class Ma000120InterpretationBuilder
 
         Rule("OT_DAILY_EXCESS_HOURS", "QUANTITY_CALCULATION", 40, "21.3, 23.2",
             "Daily overtime excess over 8 hours or 10 hours by agreement.",
-            "!IsLeave ? Max(0m, PaidHours - (HasTag(ShiftTag, \"agreed10HourDay\") ? 10m : 8m)) : 0m",
+            "!IsLeave ? Max(0m, (PaidHoursBeforeSegmentInShift + PaidHours) - (HasTag(ShiftTag, \"agreed10HourDay\") ? 10m : 8m)) - Max(0m, PaidHoursBeforeSegmentInShift - (HasTag(ShiftTag, \"agreed10HourDay\") ? 10m : 8m)) : 0m",
             "DailyExcessOvertimeHours", "decimal");
 
         Rule("OT_WEEKLY_EXCESS_HOURS", "QUANTITY_CALCULATION", 41, "21, 23.2",
@@ -379,37 +389,37 @@ public static class Ma000120InterpretationBuilder
 
         Rule("ALLOW_BROKEN_SHIFT_AMOUNT", "ALLOWANCE_CALCULATION", 100, "15.2",
             "Broken shift allowance.",
-            "!IsLeave && BrokenShiftCount > 1m ? StandardRateWeekly * 0.0182m : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && BrokenShiftCount > 1m ? StandardRateWeekly * 0.0182m : 0m",
             "BrokenShiftAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_LAUNDRY_AMOUNT", "ALLOWANCE_CALCULATION", 101, "15.3",
             "Laundry allowance.",
-            "!IsLeave && LaundryRequired ? (LaundryRequiresIroning ? 1.90m : 1.20m) : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && LaundryRequired ? (LaundryRequiresIroning ? 1.90m : 1.20m) : 0m",
             "LaundryAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_FIRST_AID_AMOUNT", "ALLOWANCE_CALCULATION", 102, "15.5",
             "First aid allowance.",
-            "!IsLeave && FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && FirstAidRequired ? (IsOSHC ? PayableDayWorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m",
             "FirstAidAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_MEAL_AMOUNT", "ALLOWANCE_CALCULATION", 103, "15.6",
             "Meal allowance.",
-            "!IsLeave && MealAllowanceRequired ? 15.48m : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && MealAllowanceRequired ? 15.48m : 0m",
             "MealAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_EXCESS_FARES_AMOUNT", "ALLOWANCE_CALCULATION", 104, "15.4",
             "Excess fares allowance.",
-            "!IsLeave && ExcessFaresRequired ? 16.86m : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && ExcessFaresRequired ? 16.86m : 0m",
             "ExcessFaresAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_VEHICLE_AMOUNT", "ALLOWANCE_CALCULATION", 105, "15.7",
             "Vehicle allowance.",
-            "!IsLeave && VehicleType == \"car\" ? VehicleKm * 0.99m : (!IsLeave && VehicleType == \"motorcycle\" ? VehicleKm * 0.33m : 0m)",
+            "!IsLeave && IsFirstPayableSegmentForDay && VehicleType == \"car\" ? VehicleKm * 0.99m : (!IsLeave && IsFirstPayableSegmentForDay && VehicleType == \"motorcycle\" ? VehicleKm * 0.33m : 0m)",
             "VehicleAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_EDUCATIONAL_LEADER_AMOUNT", "ALLOWANCE_CALCULATION", 106, "15.8",
             "Educational leader allowance weekly amount.",
-            "!IsLeave && EducationalLeaderDaysPerWeek > 0m ? (4567.31m * EducationalLeaderDaysPerWeek / 5m / 52m) : 0m",
+            "!IsLeave && IsFirstPayableSegmentForDay && EducationalLeaderDaysPerWeek > 0m ? (4567.31m * EducationalLeaderDaysPerWeek / 5m / 52m) : 0m",
             "EducationalLeaderAllowanceWeeklyAmount", "decimal", "payroll_line", "must_have_regulation_118_assignment");
 
         Rule("TOIL_ELIGIBLE", "TOIL_LEDGER", 120, "23.8",
@@ -446,6 +456,12 @@ public static class Ma000120InterpretationBuilder
             "Award salary top-up amount.",
             "EmploymentCategory == \"salaried\" ? Max(0m, AwardReferenceGross - WeeklySalaryAmount) : 0m",
             "SalaryTopUpAmount", "decimal", "payroll_line", "salary_reconciliation_required");
+
+        foreach (var rule in rules.Where(r => r.RuleId is "PAY_SATURDAY_SHIFTWORKER_AMOUNT" or "PAY_SUNDAY_AMOUNT" or "PAY_PUBLIC_HOLIDAY_AMOUNT"))
+        {
+            rule.StackingGroup = "day_penalty";
+            rule.StackingPolicy = "highest_of";
+        }
 
         return rules;
     }

@@ -9,12 +9,14 @@ public sealed class GovernedAwardRuleEngine
     private readonly GovernedExpressionLibrary _library;
     private readonly EngineOptions _options;
     private readonly Interpreter _interpreter;
+    private readonly string _ruleSetVersionId;
 
-    public GovernedAwardRuleEngine(GovernedExpressionLibrary library, EngineOptions options)
+    public GovernedAwardRuleEngine(GovernedExpressionLibrary library, EngineOptions options, string ruleSetVersionId = "")
     {
         _library = library;
         _options = options;
         _interpreter = BuildInterpreter();
+        _ruleSetVersionId = ruleSetVersionId;
     }
 
     public PayRunResult Calculate(PayRunRequest request)
@@ -22,6 +24,7 @@ public sealed class GovernedAwardRuleEngine
         var context = BuildContext(request);
         var result = new PayRunResult
         {
+            RuleSetVersionId = _ruleSetVersionId,
             LibraryId = _library.LibraryId,
             AwardCode = _library.AwardCode,
             AwardName = _library.AwardName,
@@ -205,10 +208,14 @@ public sealed class GovernedAwardRuleEngine
         {
             SegmentId = GetString(context, "SegmentId") ?? "",
             RuleId = rule.RuleId,
+            RuleVersion = rule.Version,
             OutputKey = rule.OutputKey,
             ClauseReference = rule.ClauseReference,
             PayCategory = category,
             Description = rule.Description,
+            Formula = rule.Expression,
+            StackingGroup = rule.StackingGroup,
+            StackingPolicy = string.IsNullOrWhiteSpace(rule.StackingPolicy) ? "cumulative" : rule.StackingPolicy,
             Amount = amount,
             Exportable = !requiresReview,
             RequiresReview = requiresReview

@@ -1,6 +1,6 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Globalization;
 
 namespace AwardInterpretationRulesEngine;
 
@@ -268,6 +268,9 @@ public sealed class PayRunDay
     public string DayType { get; set; } = "weekday";
     public bool ActualPublicHoliday { get; set; }
     public bool SubstitutedPublicHoliday { get; set; }
+    public string PublicHolidayId { get; set; } = "";
+    public string PublicHolidayStart { get; set; } = "";
+    public string PublicHolidayEnd { get; set; } = "";
     public string PublicHolidayElectionEvidence { get; set; } = "";
     public string LeaveType { get; set; } = "";
     public decimal LeaveHours { get; set; }
@@ -324,6 +327,8 @@ public sealed class PayRunRequest
 
 public sealed class AggregatePayRunResult
 {
+    public string RuleSetVersionId { get; set; } = "";
+    public string AwardCode { get; set; } = "";
     public string EmployeeReference { get; set; } = "";
     public string PayPeriodReference { get; set; } = "";
     public decimal PayrollGross { get; set; }
@@ -342,6 +347,7 @@ public sealed class AggregatePayRunResult
 
 public sealed class PayRunResult
 {
+    public string RuleSetVersionId { get; set; } = "";
     public string LibraryId { get; set; } = "";
     public string AwardCode { get; set; } = "";
     public string AwardName { get; set; } = "";
@@ -370,10 +376,14 @@ public sealed record PayLine
     public string SourceBucket { get; init; } = "award_reference_lines";
     public string SegmentId { get; init; } = "";
     public string RuleId { get; init; } = "";
+    public string RuleVersion { get; init; } = "";
     public string OutputKey { get; init; } = "";
     public string ClauseReference { get; init; } = "";
     public string PayCategory { get; init; } = "";
     public string Description { get; init; } = "";
+    public string Formula { get; init; } = "";
+    public string StackingGroup { get; init; } = "";
+    public string StackingPolicy { get; init; } = "cumulative";
     public decimal Amount { get; init; }
     public bool Exportable { get; init; }
     public bool RequiresReview { get; init; }
@@ -503,6 +513,8 @@ public sealed class RuleDefinition
     public string OutputKey { get; set; } = "";
     public string OutputType { get; set; } = "";
     public string Action { get; set; } = "set_value";
+    public string StackingGroup { get; set; } = "";
+    public string StackingPolicy { get; set; } = "cumulative";
     public string ManualReviewPolicy { get; set; } = "auto";
     public List<string> EvidenceRequirements { get; set; } = [];
 }
