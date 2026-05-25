@@ -341,6 +341,12 @@ public static class Ma000120InterpretationBuilder
             "EmploymentCategory == \"salaried\" ? Max(0m, AwardReferenceGross - WeeklySalaryAmount) : 0m",
             "SalaryTopUpAmount", "decimal", "payroll_line", "salary_reconciliation_required");
 
+        foreach (var rule in rules.Where(r => r.RuleId is "PAY_SATURDAY_SHIFTWORKER_AMOUNT" or "PAY_SUNDAY_AMOUNT" or "PAY_PUBLIC_HOLIDAY_AMOUNT"))
+        {
+            rule.StackingGroup = "day_penalty";
+            rule.StackingPolicy = "highest_of";
+        }
+
         return rules;
     }
 

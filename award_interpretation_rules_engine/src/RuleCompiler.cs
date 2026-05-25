@@ -106,6 +106,7 @@ public sealed class SemanticEvidence
 
 public sealed record RuleSetVersion
 {
+    public string TenantId { get; init; } = "";
     public string RuleSetVersionId { get; init; } = "";
     public string AwardCode { get; init; } = "";
     public int PublishedYear { get; init; }
