@@ -282,6 +282,11 @@ public static class Ma000120AcceptanceSuite
     private static string ProjectRoot()
     {
         var current = Directory.GetCurrentDirectory();
+        var nestedProject = Path.Combine(current, "award_interpretation_rules_engine", "AwardInterpretationRulesEngine.csproj");
+        if (File.Exists(nestedProject))
+            return Path.GetDirectoryName(nestedProject)
+                ?? throw new InvalidOperationException("Could not resolve AwardInterpretationRulesEngine project directory.");
+
         while (!File.Exists(Path.Combine(current, "AwardInterpretationRulesEngine.csproj")))
         {
             var parent = Directory.GetParent(current)?.FullName;
