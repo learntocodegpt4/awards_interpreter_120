@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/learntocodegpt4/awards_interpreter_120/schemas/fair-work-source-ingestion.schema.json",
+  "title": "Fair Work Source Ingestion Record",
+  "description": "Candidate source record emitted by Fair Work API ingestion, public award HTML parsing, or governed manual review adjustment. Candidate records are not executable payroll rules until approved and compiled into an immutable rule snapshot.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceRecordId",
+    "awardCode",
+    "sourceType",
+    "retrievedAt",
+    "parserVersion",
+    "contentSha256",
+    "rawPayloadRef",
+    "reviewStatus",
+    "normalizedRows"
+  ],
+  "properties": {
+    "sourceRecordId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "awardCode": {
+      "type": "string",
+      "pattern": "^MA[0-9]{6}$",
+      "examples": ["MA000120"]
+    },
+    "sourceType": {
+      "type": "string",
+      "enum": [
+        "fair_work_api",
+        "public_award_html",
+        "manual_review_adjustment"
+      ]
+    },
+    "configuredEndpointKey": {
+      "type": "string",
+      "description": "Logical configuration key used for API ingestion, such as fair_work.award_details. Do not store developer-portal-only endpoint URLs in source code."
+    },
+    "sourceUri": {
+      "type": "string",
+      "format": "uri",
+      "description": "Public source URI when available. API jobs may omit this if the concrete endpoint is environment-specific."
+    },
+    "retrievedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "effectiveFrom": {
+      "type": "string",
+      "format": "date"
+    },
+    "effectiveTo": {
+      "type": "string",
+      "format": "date"
+    },
+    "sourceVersion": {
+      "type": "string",
+      "description": "Version, ETag, publication marker, or other upstream version identifier when provided by the source."
+    },
+    "parserVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contentSha256": {
+      "type": "string",
+      "pattern": "^[a-fA-F0-9]{64}$"
+    },
+    "rawPayloadRef": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Durable storage reference for the raw API response, HTML payload, or manual adjustment."
+    },
+    "reviewStatus": {
+      "type": "string",
+      "enum": [
+        "candidate",
+        "needs_review",
+        "approved",
+        "rejected",
+        "superseded"
+      ]
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reviewedBy": {
+          "type": "string"
+        },
+        "reviewedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "decisionReason": {
+          "type": "string"
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "error"]
+          }
+        }
+      }
+    },
+    "normalizedRows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "rowId",
+          "awardReference",
+          "sourceText",
+          "conditionJson"
+        ],
+        "properties": {
+          "rowId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "awardReference": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["clause"],
+            "properties": {
+              "clause": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "sourceText": {
+            "type": "string",
+            "minLength": 1
+          },
+          "conditionJson": {
+            "type": "object",
+            "description": "Candidate condition expression produced by ingestion. It must be reviewed and compiled before payroll execution."
+          },
+          "interpretationNotes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "sourceType": {
+            "const": "fair_work_api"
+          }
+        },
+        "required": ["sourceType"]
+      },
+      "then": {
+        "required": ["configuredEndpointKey"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "sourceType": {
+            "const": "public_award_html"
+          }
+        },
+        "required": ["sourceType"]
+      },
+      "then": {
+        "required": ["sourceUri"]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "reviewStatus": {
+            "const": "approved"
+          }
+        },
+        "required": ["reviewStatus"]
+      },
+      "then": {
+        "required": ["review"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\SourceCode\\rosteredai\\awards_analysis\\MA000120RuleEngine\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{634DE1CC-8558-19BB-607D-65245AEC4B39}|MA000120RuleEngine.csproj|d:\\sourcecode\\rosteredai\\awards_analysis\\ma000120ruleengine\\data\\payratedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{634DE1CC-8558-19BB-607D-65245AEC4B39}|MA000120RuleEngine.csproj|solutionrelative:data\\payratedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{634DE1CC-8558-19BB-607D-65245AEC4B39}|MA000120RuleEngine.csproj|d:\\sourcecode\\rosteredai\\awards_analysis\\ma000120ruleengine\\data\\awardrules.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{634DE1CC-8558-19BB-607D-65245AEC4B39}|MA000120RuleEngine.csproj|solutionrelative:data\\awardrules.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PayRateData.cs",
+              "DocumentMoniker": "D:\\SourceCode\\rosteredai\\awards_analysis\\MA000120RuleEngine\\Data\\PayRateData.cs",
+              "RelativeDocumentMoniker": "Data\\PayRateData.cs",
+              "ToolTip": "D:\\SourceCode\\rosteredai\\awards_analysis\\MA000120RuleEngine\\Data\\PayRateData.cs",
+              "RelativeToolTip": "Data\\PayRateData.cs",
+              "ViewState": "AgIAABcAAAAAAAAAAAAQwCkAAACKAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-22T06:51:37.924Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AwardRules.cs",
+              "DocumentMoniker": "D:\\SourceCode\\rosteredai\\awards_analysis\\MA000120RuleEngine\\Data\\AwardRules.cs",
+              "RelativeDocumentMoniker": "Data\\AwardRules.cs",
+              "ToolTip": "D:\\SourceCode\\rosteredai\\awards_analysis\\MA000120RuleEngine\\Data\\AwardRules.cs",
+              "RelativeToolTip": "Data\\AwardRules.cs",
+              "ViewState": "AgIAABoAAAAAAAAAAAAQwAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-22T06:51:26.739Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11626.88 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MA000120RuleEngine", "MA000120RuleEngine.csproj", "{634DE1CC-8558-19BB-607D-65245AEC4B39}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{634DE1CC-8558-19BB-607D-65245AEC4B39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{634DE1CC-8558-19BB-607D-65245AEC4B39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{634DE1CC-8558-19BB-607D-65245AEC4B39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{634DE1CC-8558-19BB-607D-65245AEC4B39}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0D07E300-E03D-4F3D-9744-489273FE6C12}
+	EndGlobalSection
+EndGlobal
