@@ -10,13 +10,19 @@ public sealed class GovernedAwardRuleEngine
     private readonly EngineOptions _options;
     private readonly Interpreter _interpreter;
     private readonly string _ruleSetVersionId;
+    private readonly IExpressionParameterBinder _parameterBinder;
 
-    public GovernedAwardRuleEngine(GovernedExpressionLibrary library, EngineOptions options, string ruleSetVersionId = "")
+    public GovernedAwardRuleEngine(
+        GovernedExpressionLibrary library,
+        EngineOptions options,
+        string ruleSetVersionId = "",
+        IExpressionParameterBinder? parameterBinder = null)
     {
         _library = library;
         _options = options;
         _interpreter = BuildInterpreter();
         _ruleSetVersionId = ruleSetVersionId;
+        _parameterBinder = parameterBinder ?? new GovernedExpressionParameterBinder();
     }
 
     public PayRunResult Calculate(PayRunRequest request)
@@ -99,6 +105,9 @@ public sealed class GovernedAwardRuleEngine
         context.TryAdd("AwardReferenceGross", 0m);
         context.TryAdd("WeeklySalaryAmount", 0m);
         context.TryAdd("ShiftworkMultiplier", 1m);
+
+        foreach (var rule in _library.Rules)
+            context.TryAdd(rule.OutputKey, DefaultFor(rule.OutputType));
     }
 
     private void ValidateParameters(Dictionary<string, object?> context, PayRunResult result)
@@ -139,7 +148,7 @@ public sealed class GovernedAwardRuleEngine
 
         try
         {
-            var parameters = context.Select(p => new Parameter(p.Key, p.Value?.GetType() ?? typeof(object), p.Value)).ToArray();
+            var parameters = _parameterBinder.Bind(_library, context);
             var value = _interpreter.Eval(rule.Expression, parameters);
             value = Normalise(value, rule.OutputType);
             context[rule.OutputKey] = value;
@@ -346,4 +355,39 @@ public sealed class GovernedAwardRuleEngine
     private static bool HasTag(string? actual, string expected)
         => string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
 
+    private static object DefaultFor(string type)
+        => type.Equals("bool", StringComparison.OrdinalIgnoreCase) ? false :
+           type.Equals("string", StringComparison.OrdinalIgnoreCase) ? "" :
+           0m;
+}
+
+public interface IExpressionParameterBinder
+{
+    Parameter[] Bind(GovernedExpressionLibrary library, IReadOnlyDictionary<string, object?> context);
+}
+
+public sealed class GovernedExpressionParameterBinder : IExpressionParameterBinder
+{
+    private static readonly HashSet<string> ReferenceParameterNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "BaseRate",
+        "AllPurposeAllowanceHourly",
+        "PenaltyBaseRate",
+        "StandardRateWeekly",
+        "AwardReferenceGross",
+        "WeeklySalaryAmount",
+        "ShiftworkMultiplier"
+    };
+
+    public Parameter[] Bind(GovernedExpressionLibrary library, IReadOnlyDictionary<string, object?> context)
+    {
+        var allowedNames = new HashSet<string>(library.Parameters.Select(p => p.Name), StringComparer.OrdinalIgnoreCase);
+        allowedNames.UnionWith(ReferenceParameterNames);
+        allowedNames.UnionWith(library.Rules.Select(r => r.OutputKey).Where(k => !string.IsNullOrWhiteSpace(k)));
+
+        return context
+            .Where(p => allowedNames.Contains(p.Key))
+            .Select(p => new Parameter(p.Key, p.Value?.GetType() ?? typeof(object), p.Value))
+            .ToArray();
+    }
 }

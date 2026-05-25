@@ -38,6 +38,33 @@ public sealed class RuntimeRuleEngineServiceTests
     }
 
     [Fact]
+    public async Task CalculateAsync_uses_injected_runtime_services()
+    {
+        var snapshot = Snapshot("MA000120-2026-v1", new DateOnly(2026, 1, 1), null, 29.52m, "2026.1");
+        var normaliser = new RecordingSegmentNormaliser();
+        var calculator = new RecordingRuleCalculator();
+        var service = new RuntimeRuleEngineService(
+            new InMemoryRuleSnapshotStore([snapshot]),
+            new RuleEngineRuntimeOptions(),
+            normaliser,
+            calculator);
+
+        var result = await service.CalculateAsync(new RuleCalculationRequest
+        {
+            TenantId = "tenant-a",
+            AwardCode = "MA000120",
+            RuleSetVersionId = snapshot.RuleSetVersionId,
+            PayRun = StandardPayRun(new DateOnly(2026, 5, 25))
+        });
+
+        Assert.Same(snapshot.RulesJson, normaliser.LastLibrary);
+        Assert.NotEmpty(normaliser.LastSegments);
+        Assert.All(calculator.RuleSetVersionIds, id => Assert.Equal(snapshot.RuleSetVersionId, id));
+        Assert.Equal(normaliser.LastSegments.Count, calculator.RuleSetVersionIds.Count);
+        Assert.NotEmpty(result.Calculation.RuleTrace);
+    }
+
+    [Fact]
     public async Task RecalculateAsync_selects_explicit_historical_rule_version()
     {
         var oldSnapshot = Snapshot("MA000120-2024-v1", new DateOnly(2024, 1, 1), new DateOnly(2025, 1, 1), 20m, "2024.1");
@@ -59,6 +86,27 @@ public sealed class RuntimeRuleEngineServiceTests
         Assert.Equal(oldSnapshot.RuleSetVersionId, result.RuleSetVersionId);
         Assert.All(result.Calculation.PayrollLines, line => Assert.Equal("2024.1", line.RuleVersion));
         Assert.Equal(160m, result.Calculation.PayrollGross);
+    }
+
+    [Fact]
+    public async Task CalculateAsync_requires_explicit_rule_set_version()
+    {
+        var snapshot = Snapshot("MA000120-2026-v1", new DateOnly(2026, 1, 1), null, 29.52m, "2026.1");
+        var service = new RuntimeRuleEngineService(
+            new InMemoryRuleSnapshotStore([snapshot]),
+            new RuleEngineRuntimeOptions { RequireExplicitRuleSetVersion = false });
+
+        var result = await service.CalculateAsync(new RuleCalculationRequest
+        {
+            TenantId = "tenant-a",
+            AwardCode = "MA000120",
+            PayRun = StandardPayRun(new DateOnly(2026, 5, 25))
+        });
+
+        var exception = Assert.Single(result.ComplianceExceptions);
+        Assert.Equal("RULE_VERSION_REQUIRED", exception.RuleId);
+        Assert.True(exception.BlocksPayrollExport);
+        Assert.Empty(result.Calculation.PayrollLines);
     }
 
     [Fact]
@@ -167,6 +215,80 @@ public sealed class RuntimeRuleEngineServiceTests
             Assert.Equal(roundedAmount, trace.RoundedValue);
             Assert.Equal(rawAmount, Assert.IsType<decimal>(trace.Value));
         }
+    }
+
+    [Fact]
+    public async Task CalculateAsync_emits_blocked_warnings_toil_award_references_and_trace()
+    {
+        var snapshot = Snapshot("MA000120-2026-v1", new DateOnly(2026, 1, 1), null, 29.52m, "2026.1");
+        var service = new RuntimeRuleEngineService(
+            new InMemoryRuleSnapshotStore([snapshot]),
+            new RuleEngineRuntimeOptions());
+
+        var payRun = StandardPayRun(new DateOnly(2026, 5, 25));
+        payRun.Allowances.MealAllowanceRequired = true;
+        payRun.Days[0].Shifts[0].End = "18:30";
+        payRun.Days[0].Shifts[0].Tag = "toil";
+        payRun.Days[0].Shifts[0].EvidenceReference = "TOIL-AGREEMENT-1";
+
+        var result = await service.CalculateAsync(new RuleCalculationRequest
+        {
+            TenantId = "tenant-a",
+            AwardCode = "MA000120",
+            RuleSetVersionId = snapshot.RuleSetVersionId,
+            PayRun = payRun
+        });
+
+        Assert.NotEmpty(result.Calculation.BlockedPayrollLines);
+        Assert.NotEmpty(result.Calculation.AwardReferenceLines);
+        Assert.NotEmpty(result.Calculation.Warnings);
+        Assert.NotEmpty(result.Calculation.ToilMovements);
+        Assert.NotEmpty(result.Calculation.RuleTrace);
+        Assert.True(result.Calculation.BlockedPayrollGross > 0m);
+        Assert.Contains(result.Calculation.Warnings, w => w.BlocksPayrollExport);
+        Assert.Contains(result.Calculation.ToilMovements, m => m.RuleId == "TOIL_ACCRUAL_HOURS");
+    }
+
+    [Fact]
+    public async Task CalculateAsync_does_not_inject_undeclared_segment_metadata_into_dynamic_expresso()
+    {
+        var library = BuildLibrary(29.52m, "2026.1");
+        library.Orchestration = new Orchestration { EvaluationOrder = ["PAY_LINE_CALCULATION"] };
+        library.Rules =
+        [
+            new RuleDefinition
+            {
+                RuleId = "UNDECLARED_METADATA_PROBE",
+                Version = "2026.1",
+                EffectiveFrom = "2026-01-01",
+                EvaluationPhase = "PAY_LINE_CALCULATION",
+                Precedence = 1,
+                ClauseReference = "governance",
+                Description = "Probe that must not access segment metadata.",
+                Expression = "SourceShiftStartLocal == \"\" ? 0m : 10m",
+                OutputKey = "MetadataProbeAmount",
+                OutputType = "decimal",
+                Action = "payroll_line"
+            }
+        ];
+        library.PayCategoryMapping = [new PayCategoryMap { OutputKey = "MetadataProbeAmount", DefaultPayCategory = "Metadata probe" }];
+
+        var snapshot = Snapshot("MA000120-2026-probe", new DateOnly(2026, 1, 1), null, 29.52m, "2026.1", library);
+        var service = new RuntimeRuleEngineService(
+            new InMemoryRuleSnapshotStore([snapshot]),
+            new RuleEngineRuntimeOptions());
+
+        var result = await service.CalculateAsync(new RuleCalculationRequest
+        {
+            TenantId = "tenant-a",
+            AwardCode = "MA000120",
+            RuleSetVersionId = snapshot.RuleSetVersionId,
+            PayRun = StandardPayRun(new DateOnly(2026, 5, 25))
+        });
+
+        Assert.Empty(result.Calculation.PayrollLines);
+        Assert.Contains(result.Calculation.RuleTrace, t => t.RuleId == "UNDECLARED_METADATA_PROBE" && t.Status == "failed");
+        Assert.Contains(result.Calculation.Warnings, w => w.RuleId == "UNDECLARED_METADATA_PROBE" && w.BlocksPayrollExport);
     }
 
     [Fact]
@@ -419,5 +541,33 @@ public sealed class RuntimeRuleEngineServiceTests
         input.Days[0].Shifts[0].End = "16:00";
         input.Days[0].Shifts[0].Breaks.Clear();
         return input;
+    }
+
+    private sealed class RecordingSegmentNormaliser : ITimesheetSegmentNormaliser
+    {
+        private readonly TimesheetSegmentNormaliser _inner = new();
+
+        public GovernedExpressionLibrary? LastLibrary { get; private set; }
+        public IReadOnlyList<PayRunRequest> LastSegments { get; private set; } = [];
+
+        public IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library)
+        {
+            LastLibrary = library;
+            LastSegments = _inner.BuildSegmentRequests(input, library);
+            return LastSegments;
+        }
+    }
+
+    private sealed class RecordingRuleCalculator : IGovernedRuleCalculator
+    {
+        private readonly DynamicExpressoRuleCalculator _inner = new();
+
+        public List<string> RuleSetVersionIds { get; } = [];
+
+        public PayRunResult Calculate(GovernedExpressionLibrary library, EngineOptions options, string ruleSetVersionId, PayRunRequest request)
+        {
+            RuleSetVersionIds.Add(ruleSetVersionId);
+            return _inner.Calculate(library, options, ruleSetVersionId, request);
+        }
     }
 }
