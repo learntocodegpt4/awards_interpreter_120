@@ -132,8 +132,7 @@ public sealed class RuntimeRuleEngineServiceTests
     [Fact]
     public async Task CalculateAsync_rejects_unapproved_or_incomplete_snapshots_as_compliance_exception()
     {
-        var draftSnapshot = Snapshot("MA000120-draft", new DateOnly(2026, 1, 1), null, 29.52m, "draft");
-        draftSnapshot.Status = "draft";
+        var draftSnapshot = Snapshot("MA000120-draft", new DateOnly(2026, 1, 1), null, 29.52m, "draft") with { Status = "draft" };
         var service = new RuntimeRuleEngineService(
             new InMemoryRuleSnapshotStore([draftSnapshot]),
             new RuleEngineRuntimeOptions());
@@ -175,7 +174,7 @@ public sealed class RuntimeRuleEngineServiceTests
             CompilerVersion = "compiler-test",
             Status = "approved",
             PublishedAt = new DateTimeOffset(effectiveFrom.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero),
-            RulesJson = JsonUtil.ToJson(library)
+            RulesJson = library
         };
     }
 

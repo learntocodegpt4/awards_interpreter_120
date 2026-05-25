@@ -1,43 +1,8 @@
-using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace AwardInterpretationRulesEngine;
-
-public sealed class RuleSetVersion
-{
-    public string TenantId { get; set; } = "";
-    public string RuleSetVersionId { get; set; } = "";
-    public string AwardCode { get; set; } = "";
-    public int PublishedYear { get; set; }
-    public DateOnly EffectiveFrom { get; set; }
-    public DateOnly? EffectiveTo { get; set; }
-    public string SourceSnapshotHash { get; set; } = "";
-    public string ParserVersion { get; set; } = "";
-    public string CompilerVersion { get; set; } = "";
-    public string RulesJson { get; set; } = "";
-    public string Status { get; set; } = "draft";
-    public DateTimeOffset PublishedAt { get; set; }
-    public GovernedExpressionLibrary? Library { get; set; }
-
-    public GovernedExpressionLibrary MaterialiseLibrary()
-    {
-        if (Library is not null) return Library;
-        if (string.IsNullOrWhiteSpace(RulesJson))
-            throw new RuleSnapshotValidationException(RuleSetVersionId, "rules_json is required.");
-
-        try
-        {
-            return JsonSerializer.Deserialize<GovernedExpressionLibrary>(RulesJson, JsonUtil.Options())
-                ?? throw new RuleSnapshotValidationException(RuleSetVersionId, "rules_json could not be deserialised.");
-        }
-        catch (JsonException ex)
-        {
-            throw new RuleSnapshotValidationException(RuleSetVersionId, $"rules_json could not be deserialised: {ex.Message}");
-        }
-    }
-}
 
 public sealed class RuleCalculationRequest
 {
@@ -129,7 +94,7 @@ public sealed class InMemoryRuleSnapshotStore : IRuleSnapshotStore
             TenantMatches(s, tenantId) &&
             s.AwardCode.Equals(awardCode, StringComparison.OrdinalIgnoreCase) &&
             s.RuleSetVersionId.Equals(ruleSetVersionId, StringComparison.OrdinalIgnoreCase) &&
-            s.Status.Equals("approved", StringComparison.OrdinalIgnoreCase));
+            IsExecutableStatus(s.Status));
 
         if (snapshot is null)
             throw new RuleSnapshotValidationException(ruleSetVersionId, $"Approved rule snapshot '{ruleSetVersionId}' was not found for award '{awardCode}'.");
@@ -143,7 +108,7 @@ public sealed class InMemoryRuleSnapshotStore : IRuleSnapshotStore
             .Where(s =>
                 TenantMatches(s, tenantId) &&
                 s.AwardCode.Equals(awardCode, StringComparison.OrdinalIgnoreCase) &&
-                s.Status.Equals("approved", StringComparison.OrdinalIgnoreCase) &&
+                IsExecutableStatus(s.Status) &&
                 s.EffectiveFrom <= workDate &&
                 (s.EffectiveTo is null || s.EffectiveTo > workDate))
             .OrderByDescending(s => s.EffectiveFrom)
@@ -155,6 +120,10 @@ public sealed class InMemoryRuleSnapshotStore : IRuleSnapshotStore
 
     private static bool TenantMatches(RuleSetVersion snapshot, string tenantId)
         => string.IsNullOrWhiteSpace(snapshot.TenantId) || snapshot.TenantId.Equals(tenantId, StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsExecutableStatus(string status)
+        => status.Equals("approved", StringComparison.OrdinalIgnoreCase) ||
+           status.Equals("published", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
@@ -206,7 +175,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
             return result;
         }
 
-        var library = snapshot.MaterialiseLibrary();
+        var library = snapshot.RulesJson;
         var normaliser = new TimesheetNormaliser(library);
         var segmentRequests = normaliser.BuildSegmentRequests(request.PayRun);
         var engine = new GovernedAwardRuleEngine(library, _options.Engine, snapshot.RuleSetVersionId);
@@ -251,8 +220,8 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
 
     private static void ValidateSnapshot(RuleSetVersion snapshot, RuleCalculationRequest request, DateOnly workDate)
     {
-        if (!snapshot.Status.Equals("approved", StringComparison.OrdinalIgnoreCase))
-            throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Only approved rule snapshots can be evaluated.");
+        if (!IsExecutableStatus(snapshot.Status))
+            throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Only approved or published rule snapshots can be evaluated.");
 
         if (!snapshot.AwardCode.Equals(request.AwardCode, StringComparison.OrdinalIgnoreCase))
             throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Snapshot award_code does not match the calculation request.");
@@ -267,13 +236,17 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
             snapshot.PublishedAt == default)
             throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Snapshot metadata is incomplete.");
 
-        var library = snapshot.MaterialiseLibrary();
+        var library = snapshot.RulesJson;
         if (string.IsNullOrWhiteSpace(library.LibraryId) ||
             !library.AwardCode.Equals(snapshot.AwardCode, StringComparison.OrdinalIgnoreCase) ||
             library.Rules.Count == 0 ||
             library.Orchestration.EvaluationOrder.Count == 0)
             throw new RuleSnapshotValidationException(snapshot.RuleSetVersionId, "Snapshot rules_json is incomplete.");
     }
+
+    private static bool IsExecutableStatus(string status)
+        => status.Equals("approved", StringComparison.OrdinalIgnoreCase) ||
+           status.Equals("published", StringComparison.OrdinalIgnoreCase);
 
     private static RuleCalculationResult NewResult(RuleCalculationRequest request) => new()
     {
