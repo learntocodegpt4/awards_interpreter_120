@@ -240,6 +240,7 @@ public sealed class GovernedAwardRuleEngine
                 && !ToBool(context.GetValueOrDefault("HasPublicHolidayElectionEvidence"));
 
         return rule.ManualReviewPolicy.Contains("review", StringComparison.OrdinalIgnoreCase)
+            || rule.ManualReviewPolicy.Contains("required", StringComparison.OrdinalIgnoreCase)
             || rule.ManualReviewPolicy.Contains("must", StringComparison.OrdinalIgnoreCase);
     }
 

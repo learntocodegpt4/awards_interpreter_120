@@ -34,6 +34,7 @@ This matrix maps requirements to implementation tasks, automated tests, and Manu
 | Fatigue break rules calculate premium time until recovery. | RULE-013 | Fatigue break tests. | RULE-MQA-011. | TODO |
 | Leave loading and leave overlays are calculated correctly. | RULE-014 | Leave loading tests. | RULE-MQA-012. | TODO |
 | BOOT/base-award comparison produces top-ups. | RULE-015 | BOOT comparison tests. | RULE-MQA-013. | TODO |
+| Known award/payroll edge cases have traceable automated matrix coverage. | ROS-40 | `award_interpretation_rules_engine.runtime_tests/EdgeCaseMatrixTests.cs` loads `fixtures/ma000120-edge-case-matrix.json`; `dotnet test award_interpretation_rules_engine.runtime_tests/AwardInterpretationRulesEngine.Tests.csproj` passed. | Fixture records award clause/source evidence for cross-midnight, weekend, public holiday overlap, part-day public holiday, insufficient rest, meal breaks, sleepover, travel, laundry, higher duties, leave loading, salary top-up, and recall/on-call. | DONE |
 
 ## Review Cadence
 

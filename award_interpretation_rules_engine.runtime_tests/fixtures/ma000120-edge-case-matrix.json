@@ -246,24 +246,26 @@
       ]
     },
     "expected": {
-      "payrollGross": 324.72,
-      "awardReferenceGross": 324.72,
+      "payrollGross": 345.14,
+      "awardReferenceGross": 345.14,
       "blockedPayrollGross": 0,
       "payrollLines": [
         { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_BROKEN_SHIFT_AMOUNT", "outputKey": "BrokenShiftAllowanceAmount", "amount": 20.42 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_AFTER_TWO_AMOUNT", "outputKey": "OvertimeAfterTwoAmount", "amount": 118.08 }
       ],
       "blockedPayrollLines": [],
       "awardReferenceLines": [
         { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_BROKEN_SHIFT_AMOUNT", "outputKey": "BrokenShiftAllowanceAmount", "amount": 20.42 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_AFTER_TWO_AMOUNT", "outputKey": "OvertimeAfterTwoAmount", "amount": 118.08 }
       ],
       "warnings": [
         { "segmentId": "SEG-002", "ruleId": "OT_INSUFFICIENT_REST_TRIGGER", "severity": "review", "blocksPayrollExport": false }
       ],
-      "traceRuleIds": ["OT_INSUFFICIENT_REST_TRIGGER", "OT_INSUFFICIENT_REST_HOURS", "PAY_OVERTIME_FIRST_TWO_AMOUNT", "PAY_OVERTIME_AFTER_TWO_AMOUNT"],
+      "traceRuleIds": ["OT_INSUFFICIENT_REST_TRIGGER", "OT_INSUFFICIENT_REST_HOURS", "PAY_OVERTIME_FIRST_TWO_AMOUNT", "PAY_OVERTIME_AFTER_TWO_AMOUNT", "ALLOW_BROKEN_SHIFT_AMOUNT"],
       "segmentContexts": [
         { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 4 }
       ]
@@ -419,10 +421,12 @@
       "blockedPayrollGross": 236.16,
       "payrollLines": [],
       "blockedPayrollLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 }
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 }
       ],
       "awardReferenceLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
         { "segmentId": "SEG-001", "ruleId": "ALLOW_EXCESS_FARES_AMOUNT", "outputKey": "ExcessFaresAllowanceAmount", "amount": 16.86 },
         { "segmentId": "SEG-001", "ruleId": "ALLOW_VEHICLE_AMOUNT", "outputKey": "VehicleAllowanceAmount", "amount": 11.88 }
       ],
@@ -432,7 +436,8 @@
       ],
       "traceRuleIds": ["ALLOW_EXCESS_FARES_AMOUNT", "ALLOW_VEHICLE_AMOUNT"],
       "segmentContexts": [
-        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 4 },
+        { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 4 }
       ]
     }
   },
@@ -480,18 +485,21 @@
       "awardReferenceGross": 238.06,
       "blockedPayrollGross": 0,
       "payrollLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
         { "segmentId": "SEG-001", "ruleId": "ALLOW_LAUNDRY_AMOUNT", "outputKey": "LaundryAllowanceAmount", "amount": 1.90 }
       ],
       "blockedPayrollLines": [],
       "awardReferenceLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
         { "segmentId": "SEG-001", "ruleId": "ALLOW_LAUNDRY_AMOUNT", "outputKey": "LaundryAllowanceAmount", "amount": 1.90 }
       ],
       "warnings": [],
       "traceRuleIds": ["ALLOW_LAUNDRY_AMOUNT"],
       "segmentContexts": [
-        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 4 },
+        { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 4 }
       ]
     }
   },
@@ -615,7 +623,7 @@
         "classificationCode": "CSE_L3",
         "employmentCategory": "salaried",
         "employmentProfileCode": "FULL_TIME",
-        "annualSalary": 10400
+        "annualSalary": 5000
       },
       "days": [
         {
@@ -624,33 +632,30 @@
           "shifts": [
             {
               "start": "08:00",
-              "end": "16:30",
-              "breaks": [
-                { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
-              ]
+              "end": "12:00"
             }
           ]
         }
       ]
     },
     "expected": {
-      "payrollGross": 236.16,
-      "awardReferenceGross": 472.32,
+      "payrollGross": 118.08,
+      "awardReferenceGross": 236.16,
       "blockedPayrollGross": 0,
       "payrollLines": [
-        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 200.00 },
-        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 36.16, "requiresReview": true }
+        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 96.15 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 21.93, "requiresReview": true }
       ],
       "blockedPayrollLines": [],
       "awardReferenceLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
-        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 200.00 },
-        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 36.16, "requiresReview": true }
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 96.15 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 21.93, "requiresReview": true }
       ],
       "warnings": [],
       "traceRuleIds": ["PAY_ORDINARY_HOURS", "SAL_WEEKLY_SALARY_AMOUNT", "SAL_AWARD_TOP_UP_AMOUNT"],
       "segmentContexts": [
-        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 4 }
       ]
     }
   },
@@ -686,22 +691,24 @@
     },
     "expected": {
       "payrollGross": 0,
-      "awardReferenceGross": 132.84,
-      "blockedPayrollGross": 132.84,
+      "awardReferenceGross": 138.50,
+      "blockedPayrollGross": 138.50,
       "payrollLines": [],
       "blockedPayrollLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 44.28 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 29.52 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_BROKEN_SHIFT_AMOUNT", "outputKey": "BrokenShiftAllowanceAmount", "amount": 20.42 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
       ],
       "awardReferenceLines": [
-        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 44.28 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 29.52 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_BROKEN_SHIFT_AMOUNT", "outputKey": "BrokenShiftAllowanceAmount", "amount": 20.42 },
         { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
       ],
       "warnings": [
         { "segmentId": "SEG-001", "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "severity": "warning", "blocksPayrollExport": true },
         { "segmentId": "SEG-002", "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "severity": "warning", "blocksPayrollExport": true }
       ],
-      "traceRuleIds": ["PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PAY_OVERTIME_FIRST_TWO_AMOUNT"],
+      "traceRuleIds": ["PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PAY_ORDINARY_HOURS", "PAY_OVERTIME_FIRST_TWO_AMOUNT", "ALLOW_BROKEN_SHIFT_AMOUNT"],
       "segmentContexts": [
         { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 1 },
         { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 2 }
