@@ -1,2 +1,17 @@
 __pycache__/
 *.py[cod]
+
+# .NET
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+output/
+
+# NuGet
+project.lock.json
+project.fragment.lock.json
+artifacts/
