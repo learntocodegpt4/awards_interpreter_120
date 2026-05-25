@@ -48,6 +48,7 @@ Use this exact status vocabulary in task tables:
 | `docs/compliance/edge-case-matrix.md` | DONE | Unknown unknowns and WFM edge case matrix. |
 | `docs/integrations/stp-phase2.md` | DONE | Payroll and STP Phase 2 roadmap. |
 | `docs/qa/traceability-matrix.md` | DONE | Requirement-to-test traceability. |
+| `docs/tests/ros-41-ma000120-poc-parity.md` | DONE | MA000120 POC CLI parity report and fixture governance. |
 
 ## Operating Rules
 

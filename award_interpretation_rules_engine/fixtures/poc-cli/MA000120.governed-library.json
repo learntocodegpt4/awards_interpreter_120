@@ -1,0 +1,1410 @@
+{
+  "libraryId": "MA000120_DYNAMIC_EXPRESSO_GOVERNED_LIBRARY",
+  "libraryName": "Children\u0027s Services Award 2010 [MA000120] Governed Expression Library",
+  "schemaVersion": "1.0.0",
+  "snapshotId": "MA000120-2026-03-01-ACCEPTANCE",
+  "snapshotVersion": "1.0.0",
+  "awardCode": "MA000120",
+  "awardName": "Children\u0027s Services Award 2010",
+  "effectiveFrom": "2026-03-01",
+  "sourceRecordIds": [
+    "MA000120-afd49d15dce3"
+  ],
+  "sourceContentSha256": [
+    "afd49d15dce3743067575bfc4fa1ee9d1163f9ea2fa0167fa3027b73ab25ea67"
+  ],
+  "approval": {
+    "gateStatus": "approved_for_compilation",
+    "approvalId": "MA000120-ACCEPTANCE-GATE-2026-03-01",
+    "approvedBy": "governed_ma000120_acceptance_baseline",
+    "approvedAtUtc": "2026-03-01T00:00:00+00:00"
+  },
+  "orchestration": {
+    "evaluationOrder": [
+      "PRECONDITIONS",
+      "NORMALISATION",
+      "ELIGIBILITY_FLAGS",
+      "QUANTITY_CALCULATION",
+      "PAY_CATEGORY_SELECTION",
+      "PAY_LINE_CALCULATION",
+      "ALLOWANCE_CALCULATION",
+      "TOIL_LEDGER",
+      "SALARY_RECONCILIATION",
+      "MANUAL_REVIEW",
+      "EXPORT"
+    ]
+  },
+  "referenceData": {
+    "classifications": [
+      {
+        "code": "CSE_L1",
+        "name": "CSE Level 1 - Introductory Educator",
+        "weekly": 995.40,
+        "hourly": 26.19,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L2",
+        "name": "CSE Level 2 - Educator",
+        "weekly": 1025.90,
+        "hourly": 27.00,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L3",
+        "name": "CSE Level 3 - Qualified Educator",
+        "weekly": 1121.80,
+        "hourly": 29.52,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L4",
+        "name": "CSE Level 4 - Experienced Educator",
+        "weekly": 1197.10,
+        "hourly": 31.50,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L5",
+        "name": "CSE Level 5 - Advanced Educator",
+        "weekly": 1263.30,
+        "hourly": 33.24,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L6",
+        "name": "CSE Level 6 - Room Leader",
+        "weekly": 1321.50,
+        "hourly": 34.78,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L7",
+        "name": "CSE Level 7 - Assistant Director",
+        "weekly": 1381.90,
+        "hourly": 36.37,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "CSE_L8",
+        "name": "CSE Level 8 - Director",
+        "weekly": 1593.50,
+        "hourly": 41.93,
+        "clauseReference": "14.1(b)"
+      },
+      {
+        "code": "SW_L1_1",
+        "name": "Support Worker Level 1.1",
+        "weekly": 948.00,
+        "hourly": 24.95,
+        "clauseReference": "14.2"
+      },
+      {
+        "code": "SW_L2_1",
+        "name": "Support Worker Level 2.1",
+        "weekly": 977.00,
+        "hourly": 25.71,
+        "clauseReference": "14.2"
+      },
+      {
+        "code": "SW_L2_2",
+        "name": "Support Worker Level 2.2",
+        "weekly": 1009.10,
+        "hourly": 26.56,
+        "clauseReference": "14.2"
+      },
+      {
+        "code": "SW_L3_1",
+        "name": "Support Worker Level 3.1",
+        "weekly": 1068.40,
+        "hourly": 28.12,
+        "clauseReference": "14.2"
+      }
+    ],
+    "allowances": {
+      "standardRateWeekly": 1121.80,
+      "brokenShiftPercentOfStandardRate": 0.0182,
+      "laundryRequiresIroningPerDay": 1.90,
+      "laundryNoIroningPerDay": 1.20,
+      "excessFaresPerDay": 16.86,
+      "mealAllowance": 15.48,
+      "vehicleCarPerKm": 0.99,
+      "vehicleMotorcyclePerKm": 0.33,
+      "educationalLeaderAnnual": 4567.31
+    }
+  },
+  "parameters": [
+    {
+      "name": "ClassificationCode",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "EmploymentCategory",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "EmploymentProfileCode",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "DayType",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ResolvedDayType",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ShiftTag",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "HasEvidenceReference",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "WorkedHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RawShiftHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PaidHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PaidHoursBeforeSegmentInShift",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "WeeklyHoursBeforeShift",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ContractedWeeklyHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ShiftStartMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ShiftEndMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsShiftworker",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsPermanentNightShift",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsLeave",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "LeaveType",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "LeaveHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "LeavePenaltyMultiplier",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsFirstPayableSegmentForDay",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PayableDayWorkedHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsPublicHolidayFromCalendar",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsActualPublicHoliday",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsSubstitutedPublicHoliday",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "HasPublicHolidayElectionEvidence",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "UnpaidMealBreakMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PaidMealBreakMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "MealBreakInterrupted",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RequiredToRemainOnPremises",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PaidRestPauseCount",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RestHoursSincePreviousShift",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "BrokenShiftCount",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "BrokenShiftSpreadHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "WorkedHoursBeyondBrokenSpreadCap",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "OutsideOrdinarySpanHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PartTimeOutsideRegularPatternHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "MissedMealPenaltyHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "HigherDutiesHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "HigherDutiesRate",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "OpeningToilBalanceHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ToilTakenHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ForceToilPayoutHours",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "AnnualSalary",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "VehicleKm",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "VehicleType",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "FirstAidRequired",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsOSHC",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "LaundryRequired",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "LaundryRequiresIroning",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "MealAllowanceRequired",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "ExcessFaresRequired",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "EducationalLeaderDaysPerWeek",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    }
+  ],
+  "rules": [
+    {
+      "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PRECONDITIONS",
+      "precedence": 1,
+      "sourceId": "",
+      "clauseReference": "Evidence governance",
+      "description": "Agreement-based shift tags require evidence.",
+      "expression": "ShiftTag != \u0022none\u0022 \u0026\u0026 ShiftTag != \u0022permanentNightShift\u0022 \u0026\u0026 !HasEvidenceReference",
+      "outputKey": "RequiresEvidenceReview",
+      "outputType": "bool",
+      "action": "warning",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_review_before_payroll_export",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "NORM_PENALTY_BASE_RATE",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "NORMALISATION",
+      "precedence": 5,
+      "sourceId": "",
+      "clauseReference": "23.2",
+      "description": "Base hourly rate plus all-purpose allowance.",
+      "expression": "BaseRate \u002B AllPurposeAllowanceHourly",
+      "outputKey": "PenaltyBaseRate",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PH_RESOLVE_IS_PUBLIC_HOLIDAY",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "NORMALISATION",
+      "precedence": 10,
+      "sourceId": "",
+      "clauseReference": "27",
+      "description": "Resolve public holiday treatment after calendar and substitution tags.",
+      "expression": "HasTag(ShiftTag, \u0022agreedSubstitutedPublicHoliday\u0022) || IsSubstitutedPublicHoliday || ((IsActualPublicHoliday || IsPublicHolidayFromCalendar || DayType == \u0022public_holiday\u0022) \u0026\u0026 !HasTag(ShiftTag, \u0022agreedNonPublicHoliday\u0022))",
+      "outputKey": "ResolvedIsPublicHoliday",
+      "outputType": "bool",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PH_RESOLVE_DAY_TYPE",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "NORMALISATION",
+      "precedence": 11,
+      "sourceId": "",
+      "clauseReference": "27",
+      "description": "Map public holiday flag to resolved day type.",
+      "expression": "ResolvedIsPublicHoliday ? \u0022public_holiday\u0022 : DayType",
+      "outputKey": "ResolvedDayType",
+      "outputType": "string",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "MIN_WEEKEND_PUBLIC_HOLIDAY_4H",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 20,
+      "sourceId": "",
+      "clauseReference": "23.5",
+      "description": "Four-hour minimum payment for Saturday, Sunday or public holiday.",
+      "expression": "(ResolvedDayType == \u0022saturday\u0022 || ResolvedDayType == \u0022sunday\u0022 || ResolvedDayType == \u0022public_holiday\u0022) ? Max(PaidHours, 4m) : PaidHours",
+      "outputKey": "PaidHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "MIN_WEEKDAY_PART_TIME_CASUAL_2H",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 21,
+      "sourceId": "",
+      "clauseReference": "10, 23.5",
+      "description": "Two-hour weekday minimum engagement for part-time/casual.",
+      "expression": "(ResolvedDayType == \u0022weekday\u0022 \u0026\u0026 (EmploymentCategory == \u0022part_time\u0022 || EmploymentCategory == \u0022casual\u0022)) ? Max(PaidHours, 2m) : PaidHours",
+      "outputKey": "PaidHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_DAILY_EXCESS_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 40,
+      "sourceId": "",
+      "clauseReference": "21.3, 23.2",
+      "description": "Daily overtime excess over 8 hours or 10 hours by agreement.",
+      "expression": "!IsLeave ? Max(0m, (PaidHoursBeforeSegmentInShift \u002B PaidHours) - (HasTag(ShiftTag, \u0022agreed10HourDay\u0022) ? 10m : 8m)) - Max(0m, PaidHoursBeforeSegmentInShift - (HasTag(ShiftTag, \u0022agreed10HourDay\u0022) ? 10m : 8m)) : 0m",
+      "outputKey": "DailyExcessOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_WEEKLY_EXCESS_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 41,
+      "sourceId": "",
+      "clauseReference": "21, 23.2",
+      "description": "Weekly overtime excess over contracted weekly hours.",
+      "expression": "!IsLeave ? Max(0m, (WeeklyHoursBeforeShift \u002B PaidHours) - ContractedWeeklyHours) : 0m",
+      "outputKey": "WeeklyExcessOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_OUTSIDE_SPAN_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 42,
+      "sourceId": "",
+      "clauseReference": "21.3, 23.2",
+      "description": "Outside ordinary span hours for weekday day workers.",
+      "expression": "(!IsLeave \u0026\u0026 !IsShiftworker \u0026\u0026 ResolvedDayType == \u0022weekday\u0022) ? OutsideOrdinarySpanHours : 0m",
+      "outputKey": "OutsideSpanOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_PART_TIME_PATTERN_EXCESS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 43,
+      "sourceId": "",
+      "clauseReference": "10.4, 23.2",
+      "description": "Part-time outside regular pattern hours unless agreed additional normal hours tag applies.",
+      "expression": "(!IsLeave \u0026\u0026 EmploymentCategory == \u0022part_time\u0022 \u0026\u0026 !HasTag(ShiftTag, \u0022agreedAdditionalNormalHours\u0022)) ? PartTimeOutsideRegularPatternHours : 0m",
+      "outputKey": "PartTimePatternOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "requires_agreement_evidence_for_suppression",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_INSUFFICIENT_REST_TRIGGER",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ELIGIBILITY_FLAGS",
+      "precedence": 44,
+      "sourceId": "",
+      "clauseReference": "22.3",
+      "description": "Insufficient rest between work periods.",
+      "expression": "!IsLeave \u0026\u0026 RestHoursSincePreviousShift \u003C (HasTag(ShiftTag, \u0022agreed8HourBreak\u0022) || EmploymentProfileCode == \u0022FULL_TIME_8H_BREAK\u0022 || EmploymentProfileCode == \u0022PART_TIME_8H_BREAK\u0022 ? 8m : 10m)",
+      "outputKey": "InsufficientRestTriggered",
+      "outputType": "bool",
+      "action": "warning_or_overtime_mode",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "review_release_from_duty_requirement",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_INSUFFICIENT_REST_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 44.1,
+      "sourceId": "",
+      "clauseReference": "22.3",
+      "description": "Affected work period hours if insufficient rest is treated as overtime.",
+      "expression": "InsufficientRestTriggered ? PaidHours : 0m",
+      "outputKey": "InsufficientRestOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_BROKEN_SHIFT_SPREAD_EXCESS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 45,
+      "sourceId": "",
+      "clauseReference": "21.5, 23.2",
+      "description": "Overtime hours beyond 12-hour broken-shift spread for day workers.",
+      "expression": "(!IsLeave \u0026\u0026 BrokenShiftCount \u003E 1m \u0026\u0026 BrokenShiftSpreadHours \u003E 12m \u0026\u0026 !IsShiftworker) ? WorkedHoursBeyondBrokenSpreadCap : 0m",
+      "outputKey": "BrokenSpreadOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "OT_COMPOSITE_WEEKDAY_OVERTIME_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "QUANTITY_CALCULATION",
+      "precedence": 49,
+      "sourceId": "",
+      "clauseReference": "21, 22.3, 23.2",
+      "description": "Final weekday overtime hours are the maximum applicable overtime trigger, capped at paid hours.",
+      "expression": "Min(PaidHours, Max(Max(Max(Max(Max(DailyExcessOvertimeHours, WeeklyExcessOvertimeHours), OutsideSpanOvertimeHours), PartTimePatternOvertimeHours), BrokenSpreadOvertimeHours), InsufficientRestOvertimeHours))",
+      "outputKey": "WeekdayOvertimeHours",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_ORDINARY_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 60,
+      "sourceId": "",
+      "clauseReference": "14, 21",
+      "description": "Ordinary weekday pay amount.",
+      "expression": "!IsLeave \u0026\u0026 !IsShiftworker \u0026\u0026 ResolvedDayType == \u0022weekday\u0022 ? Max(0m, PaidHours - WeekdayOvertimeHours) * PenaltyBaseRate * (EmploymentCategory == \u0022casual\u0022 ? 1.25m : 1.0m) : 0m",
+      "outputKey": "OrdinaryPayAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_SHIFTWORK_MULTIPLIER",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_CATEGORY_SELECTION",
+      "precedence": 61,
+      "sourceId": "",
+      "clauseReference": "23.4",
+      "description": "Select shiftwork multiplier.",
+      "expression": "(IsPermanentNightShift || HasTag(ShiftTag, \u0022permanentNightShift\u0022)) ? 1.30m : (IsShiftworker \u0026\u0026 ShiftStartMinutes \u003E= 300m \u0026\u0026 ShiftStartMinutes \u003C 360m ? 1.10m : (IsShiftworker \u0026\u0026 ShiftEndMinutes \u003E 1110m \u0026\u0026 ShiftEndMinutes \u003C= 1440m ? 1.15m : (IsShiftworker \u0026\u0026 (ShiftEndMinutes \u003E 1440m || ShiftEndMinutes \u003C= 480m) ? 1.175m : 1.0m)))",
+      "outputKey": "ShiftworkMultiplier",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_SHIFTWORK_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 61.1,
+      "sourceId": "",
+      "clauseReference": "23.4",
+      "description": "Ordinary shiftworker amount.",
+      "expression": "!IsLeave \u0026\u0026 ResolvedDayType == \u0022weekday\u0022 \u0026\u0026 IsShiftworker ? Max(0m, PaidHours - WeekdayOvertimeHours) * PenaltyBaseRate * ShiftworkMultiplier : 0m",
+      "outputKey": "ShiftworkOrdinaryAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_OVERTIME_FIRST_TWO_MULTIPLIER",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_CATEGORY_SELECTION",
+      "precedence": 62,
+      "sourceId": "",
+      "clauseReference": "23.2",
+      "description": "Overtime multiplier for first two hours.",
+      "expression": "EmploymentCategory == \u0022casual\u0022 ? 1.75m : 1.5m",
+      "outputKey": "OvertimeFirstTwoMultiplier",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_OVERTIME_AFTER_TWO_MULTIPLIER",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_CATEGORY_SELECTION",
+      "precedence": 63,
+      "sourceId": "",
+      "clauseReference": "23.2",
+      "description": "Overtime multiplier after two hours.",
+      "expression": "EmploymentCategory == \u0022casual\u0022 ? 2.25m : 2.0m",
+      "outputKey": "OvertimeAfterTwoMultiplier",
+      "outputType": "decimal",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 64,
+      "sourceId": "",
+      "clauseReference": "23.2",
+      "description": "Amount for first two overtime hours.",
+      "expression": "Min(WeekdayOvertimeHours, 2m) * PenaltyBaseRate * OvertimeFirstTwoMultiplier",
+      "outputKey": "OvertimeFirstTwoAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_OVERTIME_AFTER_TWO_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 65,
+      "sourceId": "",
+      "clauseReference": "23.2",
+      "description": "Amount for overtime after first two hours.",
+      "expression": "Max(0m, WeekdayOvertimeHours - 2m) * PenaltyBaseRate * OvertimeAfterTwoMultiplier",
+      "outputKey": "OvertimeAfterTwoAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_SATURDAY_SHIFTWORKER_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 70,
+      "sourceId": "",
+      "clauseReference": "23.5",
+      "description": "Saturday shiftworker ordinary amount.",
+      "expression": "!IsLeave \u0026\u0026 ResolvedDayType == \u0022saturday\u0022 \u0026\u0026 IsShiftworker ? PaidHours * PenaltyBaseRate * 1.5m : 0m",
+      "outputKey": "SaturdayShiftworkerAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "day_penalty",
+      "stackingPolicy": "highest_of",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_SUNDAY_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 71,
+      "sourceId": "",
+      "clauseReference": "23.5",
+      "description": "Sunday work at 200%.",
+      "expression": "!IsLeave \u0026\u0026 ResolvedDayType == \u0022sunday\u0022 ? PaidHours * PenaltyBaseRate * 2.0m : 0m",
+      "outputKey": "SundayAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "day_penalty",
+      "stackingPolicy": "highest_of",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_PUBLIC_HOLIDAY_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 72,
+      "sourceId": "",
+      "clauseReference": "23.5, 27",
+      "description": "Public holiday work at 250%.",
+      "expression": "!IsLeave \u0026\u0026 ResolvedDayType == \u0022public_holiday\u0022 ? PaidHours * PenaltyBaseRate * 2.5m : 0m",
+      "outputKey": "PublicHolidayAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "day_penalty",
+      "stackingPolicy": "highest_of",
+      "manualReviewPolicy": "review_if_public_holiday_substituted",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "BREAK_MISSED_MEAL_TRIGGER",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ELIGIBILITY_FLAGS",
+      "precedence": 80,
+      "sourceId": "",
+      "clauseReference": "22.1",
+      "description": "Shift over five hours without qualifying meal break.",
+      "expression": "!IsLeave \u0026\u0026 RawShiftHours \u003E 5m \u0026\u0026 UnpaidMealBreakMinutes \u003C 30m \u0026\u0026 !RequiredToRemainOnPremises \u0026\u0026 !HasTag(ShiftTag, \u0022mealBreakAgreement6HourShift\u0022)",
+      "outputKey": "MissedMealBreakTriggered",
+      "outputType": "bool",
+      "action": "warning_and_penalty_uplift",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "review_evidence_and_rounding",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_MISSED_MEAL_UPLIFT_FIRST_TWO",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 85,
+      "sourceId": "",
+      "clauseReference": "22.1, 23.2",
+      "description": "Missed meal-break overtime uplift.",
+      "expression": "MissedMealBreakTriggered ? Min(MissedMealPenaltyHours, 2m) * PenaltyBaseRate * ((EmploymentCategory == \u0022casual\u0022 ? 1.75m : 1.5m) - (EmploymentCategory == \u0022casual\u0022 ? 1.25m : 1.0m)) : 0m",
+      "outputKey": "MissedMealUpliftFirstTwoAmount",
+      "outputType": "decimal",
+      "action": "payroll_line_with_warning",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "review_evidence_and_rounding",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "HD_HIGHER_DUTIES_ELIGIBLE",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ELIGIBILITY_FLAGS",
+      "precedence": 90,
+      "sourceId": "",
+      "clauseReference": "18",
+      "description": "Higher duties eligibility.",
+      "expression": "!IsLeave \u0026\u0026 HigherDutiesHours \u003E= 2m \u0026\u0026 HigherDutiesRate \u003E BaseRate",
+      "outputKey": "HigherDutiesEligible",
+      "outputType": "bool",
+      "action": "set_value",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "review_duties_and_classification_evidence",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "PAY_HIGHER_DUTIES_UPLIFT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 91,
+      "sourceId": "",
+      "clauseReference": "18",
+      "description": "Higher duties uplift.",
+      "expression": "HigherDutiesEligible ? HigherDutiesHours * Max(0m, HigherDutiesRate - BaseRate) : 0m",
+      "outputKey": "HigherDutiesUpliftAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "review_duties_and_classification_evidence",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_BROKEN_SHIFT_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 100,
+      "sourceId": "",
+      "clauseReference": "15.2",
+      "description": "Broken shift allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 BrokenShiftCount \u003E 1m ? StandardRateWeekly * 0.0182m : 0m",
+      "outputKey": "BrokenShiftAllowanceAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_LAUNDRY_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 101,
+      "sourceId": "",
+      "clauseReference": "15.3",
+      "description": "Laundry allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 LaundryRequired ? (LaundryRequiresIroning ? 1.90m : 1.20m) : 0m",
+      "outputKey": "LaundryAllowanceAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_FIRST_AID_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 102,
+      "sourceId": "",
+      "clauseReference": "15.5",
+      "description": "First aid allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 FirstAidRequired ? (IsOSHC ? PayableDayWorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m",
+      "outputKey": "FirstAidAllowanceAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_MEAL_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 103,
+      "sourceId": "",
+      "clauseReference": "15.6",
+      "description": "Meal allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 MealAllowanceRequired ? 15.48m : 0m",
+      "outputKey": "MealAllowanceAmount",
+      "outputType": "decimal",
+      "action": "manual_payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_be_manager_attested",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_EXCESS_FARES_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 104,
+      "sourceId": "",
+      "clauseReference": "15.4",
+      "description": "Excess fares allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 ExcessFaresRequired ? 16.86m : 0m",
+      "outputKey": "ExcessFaresAllowanceAmount",
+      "outputType": "decimal",
+      "action": "manual_payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_be_manager_attested",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_VEHICLE_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 105,
+      "sourceId": "",
+      "clauseReference": "15.7",
+      "description": "Vehicle allowance.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 VehicleType == \u0022car\u0022 ? VehicleKm * 0.99m : (!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 VehicleType == \u0022motorcycle\u0022 ? VehicleKm * 0.33m : 0m)",
+      "outputKey": "VehicleAllowanceAmount",
+      "outputType": "decimal",
+      "action": "manual_payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_be_manager_attested",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "ALLOW_EDUCATIONAL_LEADER_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "ALLOWANCE_CALCULATION",
+      "precedence": 106,
+      "sourceId": "",
+      "clauseReference": "15.8",
+      "description": "Educational leader allowance weekly amount.",
+      "expression": "!IsLeave \u0026\u0026 IsFirstPayableSegmentForDay \u0026\u0026 EducationalLeaderDaysPerWeek \u003E 0m ? (4567.31m * EducationalLeaderDaysPerWeek / 5m / 52m) : 0m",
+      "outputKey": "EducationalLeaderAllowanceWeeklyAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_have_regulation_118_assignment",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "TOIL_ELIGIBLE",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "TOIL_LEDGER",
+      "precedence": 120,
+      "sourceId": "",
+      "clauseReference": "23.8",
+      "description": "Eligible overtime may convert to TOIL.",
+      "expression": "HasTag(ShiftTag, \u0022toil\u0022) \u0026\u0026 HasEvidenceReference \u0026\u0026 WeekdayOvertimeHours \u003E 0m",
+      "outputKey": "ToilEligible",
+      "outputType": "bool",
+      "action": "toil_ledger",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_have_separate_written_agreement",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "TOIL_ACCRUAL_HOURS",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "TOIL_LEDGER",
+      "precedence": 121,
+      "sourceId": "",
+      "clauseReference": "23.8",
+      "description": "TOIL accrues one hour per overtime hour.",
+      "expression": "ToilEligible ? WeekdayOvertimeHours : 0m",
+      "outputKey": "ToilAccrualHours",
+      "outputType": "decimal",
+      "action": "toil_ledger",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "must_have_separate_written_agreement",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "TOIL_CLOSING_BALANCE",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "TOIL_LEDGER",
+      "precedence": 122,
+      "sourceId": "",
+      "clauseReference": "23.8",
+      "description": "Closing TOIL balance.",
+      "expression": "OpeningToilBalanceHours \u002B ToilAccrualHours - ToilTakenHours - ForceToilPayoutHours",
+      "outputKey": "ClosingToilBalanceHours",
+      "outputType": "decimal",
+      "action": "toil_ledger",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "LEAVE_ANNUAL_BASE_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 125,
+      "sourceId": "",
+      "clauseReference": "25",
+      "description": "Annual leave base pay amount.",
+      "expression": "IsLeave \u0026\u0026 LeaveType == \u0022annual\u0022 ? LeaveHours * PenaltyBaseRate : 0m",
+      "outputKey": "AnnualLeaveBaseAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "LEAVE_ANNUAL_LOADING_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "PAY_LINE_CALCULATION",
+      "precedence": 126,
+      "sourceId": "",
+      "clauseReference": "25",
+      "description": "Annual leave loading higher-of amount.",
+      "expression": "IsLeave \u0026\u0026 LeaveType == \u0022annual\u0022 ? LeaveHours * PenaltyBaseRate * Max(0.175m, LeavePenaltyMultiplier - 1m) : 0m",
+      "outputKey": "AnnualLeaveLoadingAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "auto",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "SAL_WEEKLY_SALARY_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "SALARY_RECONCILIATION",
+      "precedence": 130,
+      "sourceId": "",
+      "clauseReference": "Governance overlay",
+      "description": "Weekly salary amount.",
+      "expression": "EmploymentCategory == \u0022salaried\u0022 ? AnnualSalary / 52m : 0m",
+      "outputKey": "WeeklySalaryAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "salary_reconciliation_required",
+      "evidenceRequirements": []
+    },
+    {
+      "ruleId": "SAL_AWARD_TOP_UP_AMOUNT",
+      "version": "1.0.0",
+      "effectiveFrom": "2026-03-01",
+      "evaluationPhase": "SALARY_RECONCILIATION",
+      "precedence": 131,
+      "sourceId": "",
+      "clauseReference": "Governance overlay",
+      "description": "Award salary top-up amount.",
+      "expression": "EmploymentCategory == \u0022salaried\u0022 ? Max(0m, AwardReferenceGross - WeeklySalaryAmount) : 0m",
+      "outputKey": "SalaryTopUpAmount",
+      "outputType": "decimal",
+      "action": "payroll_line",
+      "stackingGroup": "",
+      "stackingPolicy": "cumulative",
+      "manualReviewPolicy": "salary_reconciliation_required",
+      "evidenceRequirements": []
+    }
+  ],
+  "payCategoryMapping": [
+    {
+      "outputKey": "OrdinaryPayAmount",
+      "defaultPayCategory": "MA000120 Ordinary"
+    },
+    {
+      "outputKey": "ShiftworkOrdinaryAmount",
+      "defaultPayCategory": "MA000120 Shiftwork Ordinary"
+    },
+    {
+      "outputKey": "OvertimeFirstTwoAmount",
+      "defaultPayCategory": "MA000120 Overtime 150/175"
+    },
+    {
+      "outputKey": "OvertimeAfterTwoAmount",
+      "defaultPayCategory": "MA000120 Overtime 200/225"
+    },
+    {
+      "outputKey": "SaturdayShiftworkerAmount",
+      "defaultPayCategory": "MA000120 Saturday Shiftworker"
+    },
+    {
+      "outputKey": "SundayAmount",
+      "defaultPayCategory": "MA000120 Sunday"
+    },
+    {
+      "outputKey": "PublicHolidayAmount",
+      "defaultPayCategory": "MA000120 Public Holiday"
+    },
+    {
+      "outputKey": "MissedMealUpliftFirstTwoAmount",
+      "defaultPayCategory": "MA000120 Missed Meal Break Uplift"
+    },
+    {
+      "outputKey": "HigherDutiesUpliftAmount",
+      "defaultPayCategory": "MA000120 Higher Duties Uplift"
+    },
+    {
+      "outputKey": "BrokenShiftAllowanceAmount",
+      "defaultPayCategory": "MA000120 Broken Shift Allowance"
+    },
+    {
+      "outputKey": "LaundryAllowanceAmount",
+      "defaultPayCategory": "MA000120 Laundry Allowance"
+    },
+    {
+      "outputKey": "FirstAidAllowanceAmount",
+      "defaultPayCategory": "MA000120 First Aid Allowance"
+    },
+    {
+      "outputKey": "MealAllowanceAmount",
+      "defaultPayCategory": "MA000120 Meal Allowance"
+    },
+    {
+      "outputKey": "ExcessFaresAllowanceAmount",
+      "defaultPayCategory": "MA000120 Excess Fares"
+    },
+    {
+      "outputKey": "VehicleAllowanceAmount",
+      "defaultPayCategory": "MA000120 Vehicle Allowance"
+    },
+    {
+      "outputKey": "EducationalLeaderAllowanceWeeklyAmount",
+      "defaultPayCategory": "MA000120 Educational Leader Allowance"
+    },
+    {
+      "outputKey": "AnnualLeaveBaseAmount",
+      "defaultPayCategory": "MA000120 Annual Leave Base"
+    },
+    {
+      "outputKey": "AnnualLeaveLoadingAmount",
+      "defaultPayCategory": "MA000120 Annual Leave Loading"
+    },
+    {
+      "outputKey": "WeeklySalaryAmount",
+      "defaultPayCategory": "Weekly Salary"
+    },
+    {
+      "outputKey": "SalaryTopUpAmount",
+      "defaultPayCategory": "MA000120 Salary Reconciliation Top-Up"
+    }
+  ]
+}
