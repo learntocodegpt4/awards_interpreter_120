@@ -35,6 +35,7 @@ This matrix maps requirements to implementation tasks, automated tests, and Manu
 | Leave loading and leave overlays are calculated correctly. | RULE-014 | Leave loading tests. | RULE-MQA-012. | TODO |
 | BOOT/base-award comparison produces top-ups. | RULE-015 | BOOT comparison tests. | RULE-MQA-013. | TODO |
 | MA000120 sample pay run matches POC CLI artifacts. | ROS-41 | `Ma000120PocParityTests.Production_pipeline_outputs_match_poc_cli_fixtures`; `dotnet run --project award_interpretation_rules_engine/AwardInterpretationRulesEngine.csproj -- --acceptance`. | `docs/tests/ros-41-ma000120-poc-parity.md`. | DONE |
+| Known award/payroll edge cases have traceable automated matrix coverage. | ROS-40 | `award_interpretation_rules_engine.runtime_tests/EdgeCaseMatrixTests.cs` loads `fixtures/ma000120-edge-case-matrix.json`; `dotnet test award_interpretation_rules_engine.runtime_tests/AwardInterpretationRulesEngine.Tests.csproj`. | Fixture records award clause/source evidence for cross-midnight, weekend, public holiday overlap, part-day public holiday, insufficient rest, meal breaks, sleepover, travel, laundry, higher duties, leave loading, salary top-up, and recall/on-call. | DONE |
 
 ## Review Cadence
 
