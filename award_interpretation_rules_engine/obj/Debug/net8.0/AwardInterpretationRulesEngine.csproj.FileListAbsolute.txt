@@ -1,0 +1,5 @@
+D:\SourceCode\rosteredai\awards_analysis\award_interpretation_rules_engine\obj\Debug\net8.0\AwardInterpretationRulesEngine.csproj.AssemblyReference.cache
+D:\SourceCode\rosteredai\awards_analysis\award_interpretation_rules_engine\obj\Debug\net8.0\AwardInterpretationRulesEngine.GeneratedMSBuildEditorConfig.editorconfig
+D:\SourceCode\rosteredai\awards_analysis\award_interpretation_rules_engine\obj\Debug\net8.0\AwardInterpretationRulesEngine.AssemblyInfoInputs.cache
+D:\SourceCode\rosteredai\awards_analysis\award_interpretation_rules_engine\obj\Debug\net8.0\AwardInterpretationRulesEngine.AssemblyInfo.cs
+D:\SourceCode\rosteredai\awards_analysis\award_interpretation_rules_engine\obj\Debug\net8.0\AwardInterpretationRulesEngine.csproj.CoreCompileInputs.cache
