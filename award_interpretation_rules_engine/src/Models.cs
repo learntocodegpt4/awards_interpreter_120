@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Globalization;
 
 namespace AwardInterpretationRulesEngine;
 
@@ -30,12 +31,14 @@ public sealed class FairWorkApiOptions
 public sealed class OnlineAwardsOptions
 {
     public string AwardHtmlUrlTemplate { get; set; } = "https://awards.fairwork.gov.au/{awardCode}.html";
+    public DateTimeOffset? FixedRetrievedAtUtc { get; set; }
 }
 
 public sealed class EngineOptions
 {
     public bool IncludeFinalContext { get; set; } = true;
     public bool BlockPayrollExportOnErrors { get; set; } = true;
+    public DateTimeOffset? FixedCalculationTimestampUtc { get; set; }
 }
 
 public sealed class CliOptions
@@ -44,17 +47,20 @@ public sealed class CliOptions
     public string InputPath { get; set; } = "samples/sample-payrun-ma000120.json";
     public string ConfigPath { get; set; } = "appsettings.example.json";
     public string OutputDirectory { get; set; } = "output";
+    public bool RunAcceptance { get; set; }
     public bool ShowHelp { get; set; }
 
     public static string HelpText => """
     Usage:
       dotnet run -- --award MA000120 --input samples/sample-payrun-ma000120.json --config appsettings.example.json --out output
+      dotnet run -- --acceptance
 
     Options:
       --award   Award code, e.g. MA000120
       --input   Pay run input JSON
       --config  App settings JSON
       --out     Output directory
+      --acceptance  Run deterministic MA000120 acceptance tests
       --help    Show help
     """;
 
@@ -81,6 +87,9 @@ public sealed class CliOptions
                 case "-h":
                     options.ShowHelp = true;
                     break;
+                case "--acceptance":
+                    options.RunAcceptance = true;
+                    break;
             }
         }
         return options;
@@ -90,6 +99,7 @@ public sealed class CliOptions
 public sealed class PipelineResult
 {
     public AwardInterpretation Interpretation { get; set; } = new();
+    public ReviewGateResult ReviewGate { get; set; } = new();
     public GovernedExpressionLibrary Library { get; set; } = new();
     public AggregatePayRunResult Calculation { get; set; } = new();
 }
@@ -101,6 +111,8 @@ public sealed class AwardSourceSnapshot
     public string Html { get; set; } = "";
     public string? ApiAwardJson { get; set; }
     public string? ApiRatesJson { get; set; }
+    public string SourceRecordId { get; set; } = "";
+    public string ContentSha256 { get; set; } = "";
     public DateTimeOffset RetrievedAtUtc { get; set; } = DateTimeOffset.UtcNow;
 }
 
@@ -132,7 +144,78 @@ public sealed class AwardInterpretation
     public List<ClassificationRate> Classifications { get; set; } = [];
     public AllowanceReference Allowances { get; set; } = new();
     public List<StructuredRuleSummary> StructuredRules { get; set; } = [];
+    public List<SourceRecord> SourceRecords { get; set; } = [];
     public List<string> Warnings { get; set; } = [];
+}
+
+public sealed class SourceRecord
+{
+    public string SourceRecordId { get; set; } = "";
+    public string AwardCode { get; set; } = "";
+    public string SourceType { get; set; } = "";
+    public string SourceUri { get; set; } = "";
+    public DateTimeOffset RetrievedAtUtc { get; set; }
+    public string ParserVersion { get; set; } = "ma000120-template-parser/1.0.0";
+    public string ContentSha256 { get; set; } = "";
+    public string RawPayloadRef { get; set; } = "";
+    public string ReviewStatus { get; set; } = "candidate";
+    public List<NormalisedSourceRow> NormalizedRows { get; set; } = [];
+}
+
+public sealed class NormalisedSourceRow
+{
+    public string RowId { get; set; } = "";
+    public string ClauseReference { get; set; } = "";
+    public string RuleFamily { get; set; } = "";
+    public string SourceText { get; set; } = "";
+    public string ParseStatus { get; set; } = "complete_defaulted";
+    public decimal Confidence { get; set; } = 1m;
+    public ConditionJson ConditionJson { get; set; } = new();
+}
+
+public sealed class ConditionJson
+{
+    public string SchemaVersion { get; set; } = "1.0";
+    public string EntityType { get; set; } = "pay_rule";
+    public ConditionDays Days { get; set; } = new();
+    public List<string> DayTypes { get; set; } = [];
+    public bool PublicHoliday { get; set; }
+    public string HourType { get; set; } = "";
+    public string? TimeWindow { get; set; }
+    public string? ShiftType { get; set; }
+    public string Trigger { get; set; } = "";
+    public string Basis { get; set; } = "";
+    public bool IsCompounding { get; set; }
+    public string BaseRateReference { get; set; } = "ordinary_rate";
+    public string? PeriodRounding { get; set; }
+    public string StackingPolicy { get; set; } = "exclusive";
+    public List<string> DefaultedFields { get; set; } = [];
+    public List<ConditionEvidence> Evidence { get; set; } = [];
+}
+
+public sealed class ConditionDays
+{
+    public string Mode { get; set; } = "include";
+    public List<string> Values { get; set; } = [];
+    public string Source { get; set; } = "explicit_text";
+}
+
+public sealed class ConditionEvidence
+{
+    public string Field { get; set; } = "";
+    public string Text { get; set; } = "";
+    public string Source { get; set; } = "";
+}
+
+public sealed class ReviewGateResult
+{
+    public string Status { get; set; } = "not_evaluated";
+    public bool Approved { get; set; }
+    public string ApprovalId { get; set; } = "";
+    public string ApprovedBy { get; set; } = "";
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
+    public List<string> Checks { get; set; } = [];
+    public List<string> Errors { get; set; } = [];
 }
 
 public sealed class SourceReference
@@ -186,6 +269,9 @@ public sealed class PayRunDay
     public bool ActualPublicHoliday { get; set; }
     public bool SubstitutedPublicHoliday { get; set; }
     public string PublicHolidayElectionEvidence { get; set; } = "";
+    public string LeaveType { get; set; } = "";
+    public decimal LeaveHours { get; set; }
+    public decimal LeavePenaltyMultiplier { get; set; } = 1m;
     public string RegularStart { get; set; } = "";
     public string RegularEnd { get; set; } = "";
     public List<PayRunShift> Shifts { get; set; } = [];
@@ -337,14 +423,27 @@ public sealed class GovernedExpressionLibrary
     public string LibraryId { get; set; } = "";
     public string LibraryName { get; set; } = "";
     public string SchemaVersion { get; set; } = "1.0.0";
+    public string SnapshotId { get; set; } = "";
+    public string SnapshotVersion { get; set; } = "1.0.0";
     public string AwardCode { get; set; } = "";
     public string AwardName { get; set; } = "";
     public string EffectiveFrom { get; set; } = "";
+    public List<string> SourceRecordIds { get; set; } = [];
+    public List<string> SourceContentSha256 { get; set; } = [];
+    public RuleSnapshotApproval Approval { get; set; } = new();
     public Orchestration Orchestration { get; set; } = new();
     public ReferenceData ReferenceData { get; set; } = new();
     public List<ParameterDefinition> Parameters { get; set; } = [];
     public List<RuleDefinition> Rules { get; set; } = [];
     public List<PayCategoryMap> PayCategoryMapping { get; set; } = [];
+}
+
+public sealed class RuleSnapshotApproval
+{
+    public string GateStatus { get; set; } = "";
+    public string ApprovalId { get; set; } = "";
+    public string ApprovedBy { get; set; } = "";
+    public DateTimeOffset? ApprovedAtUtc { get; set; }
 }
 
 public sealed class Orchestration

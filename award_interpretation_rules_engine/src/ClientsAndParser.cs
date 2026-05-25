@@ -1,5 +1,7 @@
 using System.Net.Http.Headers;
 using AngleSharp.Html.Parser;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace AwardInterpretationRulesEngine;
@@ -17,14 +19,17 @@ public sealed class AwardSourceClient
     public async Task<AwardSourceSnapshot> FetchAsync(string awardCode, CancellationToken cancellationToken)
     {
         var onlineUrl = _settings.OnlineAwards.AwardHtmlUrlTemplate.Replace("{awardCode}", awardCode, StringComparison.OrdinalIgnoreCase);
+        var retrievedAt = _settings.OnlineAwards.FixedRetrievedAtUtc ?? DateTimeOffset.UtcNow;
         var snapshot = new AwardSourceSnapshot
         {
             AwardCode = awardCode,
             OnlineUrl = onlineUrl,
-            RetrievedAtUtc = DateTimeOffset.UtcNow
+            RetrievedAtUtc = retrievedAt
         };
 
-        snapshot.Html = await _http.GetStringAsync(onlineUrl, cancellationToken);
+        snapshot.Html = await ReadSourceTextAsync(onlineUrl, cancellationToken);
+        snapshot.ContentSha256 = ComputeSha256(snapshot.Html);
+        snapshot.SourceRecordId = $"{awardCode.ToUpperInvariant()}-{snapshot.ContentSha256[..12]}";
 
         if (_settings.FairWorkApi.Enabled && !string.IsNullOrWhiteSpace(_settings.FairWorkApi.SubscriptionKey))
         {
@@ -33,6 +38,23 @@ public sealed class AwardSourceClient
         }
 
         return snapshot;
+    }
+
+    private async Task<string> ReadSourceTextAsync(string source, CancellationToken cancellationToken)
+    {
+        if (Uri.TryCreate(source, UriKind.Absolute, out var uri) && uri.IsFile)
+            return await File.ReadAllTextAsync(uri.LocalPath, cancellationToken);
+
+        if (File.Exists(source))
+            return await File.ReadAllTextAsync(source, cancellationToken);
+
+        return await _http.GetStringAsync(source, cancellationToken);
+    }
+
+    private static string ComputeSha256(string value)
+    {
+        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(value));
+        return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
     private async Task<string?> TryGetApiJsonAsync(string pathTemplate, string awardCode, CancellationToken cancellationToken)
@@ -80,7 +102,7 @@ public sealed class OnlineAwardHtmlParser
             PlainText = text
         };
 
-        foreach (var clauseNumber in new[] { "1", "2", "3", "4", "10", "13", "14", "15", "18", "21", "22", "23", "27" })
+        foreach (var clauseNumber in new[] { "1", "2", "3", "4", "10", "13", "14", "15", "18", "21", "22", "23", "25", "27" })
         {
             var clause = ExtractClause(text, clauseNumber);
             if (clause is not null) parsed.Clauses.Add(clause);

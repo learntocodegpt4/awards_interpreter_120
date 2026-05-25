@@ -31,6 +31,18 @@ dotnet restore
 dotnet run -- --award MA000120 --input samples/sample-payrun-ma000120.json --config appsettings.example.json --out output
 ```
 
+## Run the MA000120 acceptance baseline
+
+```bash
+dotnet run -- --acceptance
+```
+
+The acceptance baseline uses a deterministic local MA000120 source fixture and
+asserts parse -> `condition_json` -> review gate -> governed snapshot ->
+calculation coverage for sample parity, ordinary time, overtime, allowances,
+public holidays, TOIL, rest/fatigue, leave loading, blocked exports, award
+references, and rule traces.
+
 ## Configuration
 
 Copy `appsettings.example.json` and set:

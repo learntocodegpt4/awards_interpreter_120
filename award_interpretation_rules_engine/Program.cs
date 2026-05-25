@@ -8,6 +8,12 @@ if (options.ShowHelp)
     return;
 }
 
+if (options.RunAcceptance)
+{
+    await Ma000120AcceptanceSuite.RunAsync(CancellationToken.None);
+    return;
+}
+
 var settings = AppSettings.Load(options.ConfigPath);
 var pipeline = new AwardPipeline(settings);
 
