@@ -65,7 +65,7 @@ public sealed class PayLineCalculatedEvent
 public sealed class RuleEngineRuntimeOptions
 {
     public EngineOptions Engine { get; set; } = new();
-    [Obsolete("Runtime calculations require an explicit approved rule_set_version_id.")]
+    // Retained for configuration compatibility; runtime execution always requires an explicit rule_set_version_id.
     public bool RequireExplicitRuleSetVersion { get; set; } = true;
 }
 
