@@ -19,4 +19,8 @@
   <ItemGroup>
     <ProjectReference Include="..\award_interpretation_rules_engine\AwardInterpretationRulesEngine.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="fixtures\ma000120-edge-case-matrix.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

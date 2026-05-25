@@ -1,0 +1,711 @@
+[
+  {
+    "id": "QA-EDGE-001",
+    "title": "Cross-midnight Friday shift splits into weekday and Saturday payable segments",
+    "edgeCases": ["cross-midnight"],
+    "awardEvidence": [
+      {
+        "clause": "21",
+        "sourceText": "Ordinary hours are evaluated against the applicable day and span for the worked segment."
+      },
+      {
+        "clause": "23.5",
+        "sourceText": "Saturday, Sunday and public holiday work has a minimum payment and separate penalty treatment."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-001",
+      "payPeriodReference": "QA-EDGE-001",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "SHIFT"
+      },
+      "days": [
+        {
+          "date": "2026-05-29",
+          "dayType": "weekday",
+          "shifts": [
+            { "start": "22:00", "end": "02:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 245.02,
+      "awardReferenceGross": 245.02,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_SHIFTWORK_AMOUNT", "outputKey": "ShiftworkOrdinaryAmount", "amount": 67.90 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_SATURDAY_SHIFTWORKER_AMOUNT", "outputKey": "SaturdayShiftworkerAmount", "amount": 177.12 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_SHIFTWORK_AMOUNT", "outputKey": "ShiftworkOrdinaryAmount", "amount": 67.90 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_SATURDAY_SHIFTWORKER_AMOUNT", "outputKey": "SaturdayShiftworkerAmount", "amount": 177.12 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["PAY_SHIFTWORK_AMOUNT", "PAY_SATURDAY_SHIFTWORKER_AMOUNT", "MIN_WEEKEND_PUBLIC_HOLIDAY_4H"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 2 },
+        { "segmentId": "SEG-002", "resolvedDayType": "saturday", "paidHours": 4 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-002",
+    "title": "Weekend Sunday minimum payment applies",
+    "edgeCases": ["weekend"],
+    "awardEvidence": [
+      {
+        "clause": "23.5",
+        "sourceText": "Sunday work is paid at the Sunday penalty rate with the weekend minimum engagement."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-002",
+      "payPeriodReference": "QA-EDGE-002",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-05-31",
+          "dayType": "sunday",
+          "shifts": [
+            { "start": "09:00", "end": "11:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 236.16,
+      "awardReferenceGross": 236.16,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_SUNDAY_AMOUNT", "outputKey": "SundayAmount", "amount": 236.16 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_SUNDAY_AMOUNT", "outputKey": "SundayAmount", "amount": 236.16 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["PAY_SUNDAY_AMOUNT", "MIN_WEEKEND_PUBLIC_HOLIDAY_4H"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "sunday", "paidHours": 4 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-003",
+    "title": "Sunday that is also a public holiday resolves to public holiday without duplicate Sunday pay",
+    "edgeCases": ["public-holiday-overlap"],
+    "awardEvidence": [
+      {
+        "clause": "27",
+        "sourceText": "Public holiday calendar evidence resolves the day to public holiday treatment."
+      },
+      {
+        "clause": "23.5",
+        "sourceText": "Public holiday work is paid at the public holiday penalty rather than duplicating weekend penalties."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-003",
+      "payPeriodReference": "QA-EDGE-003",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-05-31",
+          "dayType": "sunday",
+          "actualPublicHoliday": true,
+          "shifts": [
+            { "start": "09:00", "end": "11:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 295.20,
+      "awardReferenceGross": 295.20,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_PUBLIC_HOLIDAY_AMOUNT", "outputKey": "PublicHolidayAmount", "amount": 295.20 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_PUBLIC_HOLIDAY_AMOUNT", "outputKey": "PublicHolidayAmount", "amount": 295.20 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["PH_RESOLVE_IS_PUBLIC_HOLIDAY", "PH_RESOLVE_DAY_TYPE", "PAY_PUBLIC_HOLIDAY_AMOUNT", "PAY_SUNDAY_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "public_holiday", "paidHours": 4 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-004",
+    "title": "Part-day public holiday splits only the public holiday window to public holiday pay",
+    "edgeCases": ["part-day-public-holiday"],
+    "awardEvidence": [
+      {
+        "clause": "27",
+        "sourceText": "Part-day public holidays apply only during the declared local public holiday window."
+      },
+      {
+        "clause": "21.3, 23.2",
+        "sourceText": "Weekday hours outside the ordinary span are overtime before the public holiday window starts."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-004",
+      "payPeriodReference": "QA-EDGE-004",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-12-24",
+          "dayType": "weekday",
+          "publicHolidayId": "VIC-CHRISTMAS-EVE",
+          "publicHolidayStart": "19:00",
+          "publicHolidayEnd": "00:00",
+          "shifts": [
+            { "start": "18:00", "end": "22:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 332.10,
+      "awardReferenceGross": 332.10,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 14.76 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 22.14 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_PUBLIC_HOLIDAY_AMOUNT", "outputKey": "PublicHolidayAmount", "amount": 295.20 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 14.76 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 22.14 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_PUBLIC_HOLIDAY_AMOUNT", "outputKey": "PublicHolidayAmount", "amount": 295.20 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["OT_OUTSIDE_SPAN_HOURS", "PAY_OVERTIME_FIRST_TWO_AMOUNT", "PAY_PUBLIC_HOLIDAY_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 1 },
+        { "segmentId": "SEG-002", "resolvedDayType": "public_holiday", "paidHours": 4 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-005",
+    "title": "Insufficient rest between shifts emits fatigue warning and pays affected hours as overtime",
+    "edgeCases": ["insufficient-rest"],
+    "awardEvidence": [
+      {
+        "clause": "22.3",
+        "sourceText": "Insufficient rest between work periods triggers a reviewed fatigue/overtime outcome."
+      },
+      {
+        "clause": "23.2",
+        "sourceText": "Affected overtime hours are paid at first two and after two overtime rates."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-005",
+      "payPeriodReference": "QA-EDGE-005",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-01",
+          "dayType": "weekday",
+          "shifts": [
+            { "start": "08:00", "end": "12:00" },
+            { "start": "20:00", "end": "00:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 324.72,
+      "awardReferenceGross": 324.72,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_AFTER_TWO_AMOUNT", "outputKey": "OvertimeAfterTwoAmount", "amount": 118.08 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 118.08 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_AFTER_TWO_AMOUNT", "outputKey": "OvertimeAfterTwoAmount", "amount": 118.08 }
+      ],
+      "warnings": [
+        { "segmentId": "SEG-002", "ruleId": "OT_INSUFFICIENT_REST_TRIGGER", "severity": "review", "blocksPayrollExport": false }
+      ],
+      "traceRuleIds": ["OT_INSUFFICIENT_REST_TRIGGER", "OT_INSUFFICIENT_REST_HOURS", "PAY_OVERTIME_FIRST_TWO_AMOUNT", "PAY_OVERTIME_AFTER_TWO_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 4 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-006",
+    "title": "Missed meal break creates review warnings and award-reference uplift",
+    "edgeCases": ["meal-breaks"],
+    "awardEvidence": [
+      {
+        "clause": "22.1",
+        "sourceText": "A shift over five hours without a qualifying meal break triggers meal-break review and uplift."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-006",
+      "payPeriodReference": "QA-EDGE-006",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-02",
+          "dayType": "weekday",
+          "shifts": [
+            { "start": "08:00", "end": "14:00" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 177.12,
+      "awardReferenceGross": 191.88,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 177.12 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 177.12 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_MISSED_MEAL_UPLIFT_FIRST_TWO", "outputKey": "MissedMealUpliftFirstTwoAmount", "amount": 14.76 }
+      ],
+      "warnings": [
+        { "segmentId": "SEG-001", "ruleId": "BREAK_MISSED_MEAL_TRIGGER", "severity": "review", "blocksPayrollExport": false },
+        { "segmentId": "SEG-001", "ruleId": "PAY_MISSED_MEAL_UPLIFT_FIRST_TWO", "severity": "review", "blocksPayrollExport": false }
+      ],
+      "traceRuleIds": ["BREAK_MISSED_MEAL_TRIGGER", "PAY_MISSED_MEAL_UPLIFT_FIRST_TWO"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 6 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-007",
+    "title": "Sleepover tag without supporting evidence blocks payroll export for manual review",
+    "edgeCases": ["sleepover"],
+    "awardEvidence": [
+      {
+        "clause": "15",
+        "sourceText": "Sleepover allowance is cross-clause and additional to on-call treatment, so event evidence must be reviewed before export."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-007",
+      "payPeriodReference": "QA-EDGE-007",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-03",
+          "dayType": "weekday",
+          "shifts": [
+            { "start": "20:00", "end": "22:00", "tag": "sleepover" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 0,
+      "awardReferenceGross": 88.56,
+      "blockedPayrollGross": 88.56,
+      "payrollLines": [],
+      "blockedPayrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
+      ],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
+      ],
+      "warnings": [
+        { "segmentId": "SEG-001", "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "severity": "warning", "blocksPayrollExport": true }
+      ],
+      "traceRuleIds": ["PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PAY_OVERTIME_FIRST_TWO_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 2 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-008",
+    "title": "Travel and vehicle allowances require manager attestation and block export",
+    "edgeCases": ["travel"],
+    "awardEvidence": [
+      {
+        "clause": "15.4",
+        "sourceText": "Excess fares and travel costs are payable where the qualifying travel requirement is evidenced."
+      },
+      {
+        "clause": "15.7",
+        "sourceText": "Vehicle allowance is paid per kilometre for an authorised vehicle type."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-008",
+      "payPeriodReference": "QA-EDGE-008",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "allowances": {
+        "excessFaresRequired": true,
+        "vehicleType": "car",
+        "vehicleKm": 12
+      },
+      "days": [
+        {
+          "date": "2026-06-04",
+          "dayType": "weekday",
+          "shifts": [
+            {
+              "start": "08:00",
+              "end": "16:30",
+              "breaks": [
+                { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 0,
+      "awardReferenceGross": 264.90,
+      "blockedPayrollGross": 236.16,
+      "payrollLines": [],
+      "blockedPayrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 }
+      ],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_EXCESS_FARES_AMOUNT", "outputKey": "ExcessFaresAllowanceAmount", "amount": 16.86 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_VEHICLE_AMOUNT", "outputKey": "VehicleAllowanceAmount", "amount": 11.88 }
+      ],
+      "warnings": [
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_EXCESS_FARES_AMOUNT", "severity": "review", "blocksPayrollExport": true },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_VEHICLE_AMOUNT", "severity": "review", "blocksPayrollExport": true }
+      ],
+      "traceRuleIds": ["ALLOW_EXCESS_FARES_AMOUNT", "ALLOW_VEHICLE_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-009",
+    "title": "Laundry allowance is added once for the payable day",
+    "edgeCases": ["laundry"],
+    "awardEvidence": [
+      {
+        "clause": "15.3",
+        "sourceText": "Laundry allowance is paid where the uniform laundering requirement applies."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-009",
+      "payPeriodReference": "QA-EDGE-009",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "allowances": {
+        "laundryRequired": true,
+        "laundryRequiresIroning": true
+      },
+      "days": [
+        {
+          "date": "2026-06-05",
+          "dayType": "weekday",
+          "shifts": [
+            {
+              "start": "08:00",
+              "end": "16:30",
+              "breaks": [
+                { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 238.06,
+      "awardReferenceGross": 238.06,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_LAUNDRY_AMOUNT", "outputKey": "LaundryAllowanceAmount", "amount": 1.90 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "ALLOW_LAUNDRY_AMOUNT", "outputKey": "LaundryAllowanceAmount", "amount": 1.90 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["ALLOW_LAUNDRY_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-010",
+    "title": "Higher duties uplift traces the higher classification and remains reviewable",
+    "edgeCases": ["higher-duties"],
+    "awardEvidence": [
+      {
+        "clause": "18",
+        "sourceText": "Higher duties are payable when the employee performs duties of a higher classification for the qualifying period."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-010",
+      "payPeriodReference": "QA-EDGE-010",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-08",
+          "dayType": "weekday",
+          "shifts": [
+            {
+              "start": "08:00",
+              "end": "11:00",
+              "higherDutiesEnabled": true,
+              "higherDutiesClassificationCode": "CSE_L5"
+            }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 88.56,
+      "awardReferenceGross": 99.72,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 88.56 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 88.56 },
+        { "segmentId": "SEG-001", "ruleId": "PAY_HIGHER_DUTIES_UPLIFT", "outputKey": "HigherDutiesUpliftAmount", "amount": 11.16, "requiresReview": true }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["HD_HIGHER_DUTIES_ELIGIBLE", "PAY_HIGHER_DUTIES_UPLIFT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 3 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-011",
+    "title": "Annual leave loading uses the higher penalty-day loading outcome",
+    "edgeCases": ["leave-loading"],
+    "awardEvidence": [
+      {
+        "clause": "25",
+        "sourceText": "Annual leave loading pays the higher of the loading percentage and the applicable penalty alternative."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-011",
+      "payPeriodReference": "QA-EDGE-011",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-14",
+          "dayType": "sunday",
+          "leaveType": "annual",
+          "leaveHours": 7.6,
+          "leavePenaltyMultiplier": 2.0
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 448.70,
+      "awardReferenceGross": 448.70,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "LEAVE_ANNUAL_BASE_AMOUNT", "outputKey": "AnnualLeaveBaseAmount", "amount": 224.35 },
+        { "segmentId": "SEG-001", "ruleId": "LEAVE_ANNUAL_LOADING_AMOUNT", "outputKey": "AnnualLeaveLoadingAmount", "amount": 224.35 }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "LEAVE_ANNUAL_BASE_AMOUNT", "outputKey": "AnnualLeaveBaseAmount", "amount": 224.35 },
+        { "segmentId": "SEG-001", "ruleId": "LEAVE_ANNUAL_LOADING_AMOUNT", "outputKey": "AnnualLeaveLoadingAmount", "amount": 224.35 }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["LEAVE_ANNUAL_BASE_AMOUNT", "LEAVE_ANNUAL_LOADING_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "sunday", "paidHours": 7.6 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-012",
+    "title": "Salary reconciliation emits an award top-up when weekly salary is below award reference",
+    "edgeCases": ["salary-top-up"],
+    "awardEvidence": [
+      {
+        "clause": "Governance overlay",
+        "sourceText": "Salary reconciliation compares salary paid against award-reference entitlements and emits top-up lines where required."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-012",
+      "payPeriodReference": "QA-EDGE-012",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "salaried",
+        "employmentProfileCode": "FULL_TIME",
+        "annualSalary": 10400
+      },
+      "days": [
+        {
+          "date": "2026-06-15",
+          "dayType": "weekday",
+          "shifts": [
+            {
+              "start": "08:00",
+              "end": "16:30",
+              "breaks": [
+                { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 236.16,
+      "awardReferenceGross": 472.32,
+      "blockedPayrollGross": 0,
+      "payrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 200.00 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 36.16, "requiresReview": true }
+      ],
+      "blockedPayrollLines": [],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_ORDINARY_HOURS", "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_WEEKLY_SALARY_AMOUNT", "outputKey": "WeeklySalaryAmount", "amount": 200.00 },
+        { "segmentId": "SEG-001", "ruleId": "SAL_AWARD_TOP_UP_AMOUNT", "outputKey": "SalaryTopUpAmount", "amount": 36.16, "requiresReview": true }
+      ],
+      "warnings": [],
+      "traceRuleIds": ["PAY_ORDINARY_HOURS", "SAL_WEEKLY_SALARY_AMOUNT", "SAL_AWARD_TOP_UP_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 8 }
+      ]
+    }
+  },
+  {
+    "id": "QA-EDGE-013",
+    "title": "On-call and recall tags without event evidence block export",
+    "edgeCases": ["recall", "on-call"],
+    "awardEvidence": [
+      {
+        "clause": "Evidence governance",
+        "sourceText": "On-call and recall events must retain source evidence before payroll export."
+      }
+    ],
+    "payRun": {
+      "employeeReference": "EMP-QA-EDGE-013",
+      "payPeriodReference": "QA-EDGE-013",
+      "region": "VIC",
+      "employee": {
+        "classificationCode": "CSE_L3",
+        "employmentCategory": "full_time",
+        "employmentProfileCode": "FULL_TIME"
+      },
+      "days": [
+        {
+          "date": "2026-06-16",
+          "dayType": "weekday",
+          "shifts": [
+            { "start": "06:00", "end": "07:00", "tag": "on_call" },
+            { "start": "19:00", "end": "21:00", "tag": "recall" }
+          ]
+        }
+      ]
+    },
+    "expected": {
+      "payrollGross": 0,
+      "awardReferenceGross": 132.84,
+      "blockedPayrollGross": 132.84,
+      "payrollLines": [],
+      "blockedPayrollLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 44.28 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
+      ],
+      "awardReferenceLines": [
+        { "segmentId": "SEG-001", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 44.28 },
+        { "segmentId": "SEG-002", "ruleId": "PAY_OVERTIME_FIRST_TWO_AMOUNT", "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
+      ],
+      "warnings": [
+        { "segmentId": "SEG-001", "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "severity": "warning", "blocksPayrollExport": true },
+        { "segmentId": "SEG-002", "ruleId": "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "severity": "warning", "blocksPayrollExport": true }
+      ],
+      "traceRuleIds": ["PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PAY_OVERTIME_FIRST_TWO_AMOUNT"],
+      "segmentContexts": [
+        { "segmentId": "SEG-001", "resolvedDayType": "weekday", "paidHours": 1 },
+        { "segmentId": "SEG-002", "resolvedDayType": "weekday", "paidHours": 2 }
+      ]
+    }
+  }
+]

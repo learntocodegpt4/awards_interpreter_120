@@ -124,6 +124,11 @@ public sealed class GovernedAwardRuleEngine
 
     private void EvaluateRule(RuleDefinition rule, Dictionary<string, object?> context, PayRunResult result)
     {
+        if (rule.EvaluationPhase.Equals("SALARY_RECONCILIATION", StringComparison.OrdinalIgnoreCase))
+            context["AwardReferenceGross"] = RoundMoney(result.AwardReferenceLines
+                .Where(l => !l.RuleId.StartsWith("SAL_", StringComparison.OrdinalIgnoreCase))
+                .Sum(l => l.Amount));
+
         var trace = new RuleTrace
         {
             SegmentId = GetString(context, "SegmentId") ?? "",
