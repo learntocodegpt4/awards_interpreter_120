@@ -289,6 +289,10 @@ public static class Ma000120AcceptanceSuite
 
         while (!File.Exists(Path.Combine(current, "AwardInterpretationRulesEngine.csproj")))
         {
+            var nestedProject = Path.Combine(current, "award_interpretation_rules_engine", "AwardInterpretationRulesEngine.csproj");
+            if (File.Exists(nestedProject))
+                return Path.GetDirectoryName(nestedProject)!;
+
             var parent = Directory.GetParent(current)?.FullName;
             if (parent is null)
                 throw new InvalidOperationException("Could not locate AwardInterpretationRulesEngine.csproj.");

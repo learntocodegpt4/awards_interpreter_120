@@ -317,9 +317,9 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
 
     private static void FinaliseAggregate(AggregatePayRunResult aggregate, decimal openingToilBalanceHours)
     {
-        aggregate.PayrollGross = RoundMoney(aggregate.PayrollLines.Sum(l => l.Amount));
-        aggregate.AwardReferenceGross = RoundMoney(aggregate.AwardReferenceLines.Sum(l => l.Amount));
-        aggregate.BlockedPayrollGross = RoundMoney(aggregate.BlockedPayrollLines.Sum(l => l.Amount));
+        aggregate.PayrollGross = PayCalculationPolicy.RoundMoney(aggregate.PayrollLines.Sum(l => l.Amount));
+        aggregate.AwardReferenceGross = PayCalculationPolicy.RoundMoney(aggregate.AwardReferenceLines.Sum(l => l.Amount));
+        aggregate.BlockedPayrollGross = PayCalculationPolicy.RoundMoney(aggregate.BlockedPayrollLines.Sum(l => l.Amount));
         aggregate.ToilAccruedHours = aggregate.ToilMovements.Where(m => m.Type == "accrual").Sum(m => m.Hours);
         aggregate.ClosingToilBalanceHours = openingToilBalanceHours + aggregate.ToilAccruedHours;
     }
@@ -371,7 +371,6 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         BlocksPayrollExport = true
     };
 
-    private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 }
 
 public sealed class RuleSnapshotValidationException : Exception

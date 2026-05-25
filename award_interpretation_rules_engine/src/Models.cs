@@ -424,6 +424,8 @@ public sealed class RuleTrace
     public string OutputKey { get; set; } = "";
     public string Action { get; set; } = "";
     public object? Value { get; set; }
+    public decimal? RawValue { get; set; }
+    public decimal? RoundedValue { get; set; }
     public string Status { get; set; } = "evaluated";
     public string Error { get; set; } = "";
 }

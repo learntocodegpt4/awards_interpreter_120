@@ -142,3 +142,11 @@ The Rule Engine roadmap includes:
 ## Precision Rule
 
 Use decimal math for all payable calculations. Floating point arithmetic is not acceptable for payroll amounts.
+
+Runtime payroll calculations use the central `PayCalculationPolicy`:
+
+- Money amounts are rounded to 2 decimal places with `MidpointRounding.AwayFromZero`.
+- Pay-line expressions are evaluated in full decimal precision first; the raw evaluated value and the rounded money value are recorded on the rule trace for pay-line actions.
+- Pay line amounts use the rounded money value. Aggregate gross totals are the rounded sum of emitted rounded pay lines.
+- Time unit conversions use `TimeSpan.Ticks` converted to `decimal`, then quantities such as hours and minutes are rounded to 4 decimal places. This avoids binary floating point drift when splitting shifts, breaks, public holiday windows, and cross-midnight segments.
+- Rule expressions may call `RoundMoney` or `RoundUpToQuarterHour`; both functions delegate to the same central policy.

@@ -548,8 +548,8 @@ internal sealed class RuleExpressionValidator
             .Reference(typeof(Math))
             .SetFunction("Max", (Func<decimal, decimal, decimal>)Math.Max)
             .SetFunction("Min", (Func<decimal, decimal, decimal>)Math.Min)
-            .SetFunction("RoundMoney", (Func<decimal, decimal>)(v => Math.Round(v, 2, MidpointRounding.AwayFromZero)))
-            .SetFunction("RoundUpToQuarterHour", (Func<decimal, decimal>)(h => Math.Ceiling(h * 4m) / 4m))
+            .SetFunction("RoundMoney", (Func<decimal, decimal>)PayCalculationPolicy.RoundMoney)
+            .SetFunction("RoundUpToQuarterHour", (Func<decimal, decimal>)PayCalculationPolicy.RoundUpToQuarterHour)
             .SetFunction("HasTag", (Func<string?, string?, bool>)((a, b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase)))
             .SetFunction("In", (Func<string?, string?, bool>)((value, csv) => (csv ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase))));
 

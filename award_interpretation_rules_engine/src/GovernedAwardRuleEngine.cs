@@ -53,8 +53,8 @@ public sealed class GovernedAwardRuleEngine
             .Reference(typeof(Math))
             .SetFunction("Max", (Func<decimal, decimal, decimal>)Math.Max)
             .SetFunction("Min", (Func<decimal, decimal, decimal>)Math.Min)
-            .SetFunction("RoundMoney", (Func<decimal, decimal>)(v => Math.Round(v, 2, MidpointRounding.AwayFromZero)))
-            .SetFunction("RoundUpToQuarterHour", (Func<decimal, decimal>)(h => Math.Ceiling(h * 4m) / 4m))
+            .SetFunction("RoundMoney", (Func<decimal, decimal>)PayCalculationPolicy.RoundMoney)
+            .SetFunction("RoundUpToQuarterHour", (Func<decimal, decimal>)PayCalculationPolicy.RoundUpToQuarterHour)
             .SetFunction("HasTag", (Func<string?, string?, bool>)((a, b) => string.Equals(a, b, StringComparison.OrdinalIgnoreCase)))
             .SetFunction("In", (Func<string?, string?, bool>)((value, csv) => (csv ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Any(x => string.Equals(x, value, StringComparison.OrdinalIgnoreCase))));
 
@@ -145,6 +145,7 @@ public sealed class GovernedAwardRuleEngine
             context[rule.OutputKey] = value;
 
             trace.Value = value;
+            CapturePayLineRounding(rule, value, trace);
             trace.Status = "evaluated";
             result.RuleTrace.Add(trace);
             Materialise(rule, value, context, result);
@@ -198,7 +199,7 @@ public sealed class GovernedAwardRuleEngine
 
     private void AddPayLine(RuleDefinition rule, object? value, Dictionary<string, object?> context, PayRunResult result, string action)
     {
-        var amount = RoundMoney(ToDecimal(value));
+        var amount = PayCalculationPolicy.RoundMoney(ToDecimal(value));
         if (amount <= 0m) return;
 
         var category = _library.PayCategoryMapping.FirstOrDefault(m => m.OutputKey == rule.OutputKey)?.DefaultPayCategory ?? rule.OutputKey;
@@ -284,12 +285,27 @@ public sealed class GovernedAwardRuleEngine
 
     private void Finalise(Dictionary<string, object?> context, PayRunResult result)
     {
-        result.PayrollGross = RoundMoney(result.PayrollLines.Sum(l => l.Amount));
-        result.AwardReferenceGross = RoundMoney(result.AwardReferenceLines.Sum(l => l.Amount));
-        result.BlockedPayrollGross = RoundMoney(result.BlockedPayrollLines.Sum(l => l.Amount));
+        result.PayrollGross = PayCalculationPolicy.RoundMoney(result.PayrollLines.Sum(l => l.Amount));
+        result.AwardReferenceGross = PayCalculationPolicy.RoundMoney(result.AwardReferenceLines.Sum(l => l.Amount));
+        result.BlockedPayrollGross = PayCalculationPolicy.RoundMoney(result.BlockedPayrollLines.Sum(l => l.Amount));
         result.ToilAccruedHours = result.ToilMovements.Where(m => m.Type == "accrual").Sum(m => m.Hours);
         if (_options.IncludeFinalContext) result.FinalContext = context;
     }
+
+    private static void CapturePayLineRounding(RuleDefinition rule, object? value, RuleTrace trace)
+    {
+        if (!IsPayLineAction(rule.Action) || !rule.OutputType.Equals("decimal", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        var raw = ToDecimal(value);
+        trace.RawValue = raw;
+        trace.RoundedValue = PayCalculationPolicy.RoundMoney(raw);
+    }
+
+    private static bool IsPayLineAction(string action)
+        => action.Equals("payroll_line", StringComparison.OrdinalIgnoreCase) ||
+           action.Equals("payroll_line_with_warning", StringComparison.OrdinalIgnoreCase) ||
+           action.Equals("manual_payroll_line", StringComparison.OrdinalIgnoreCase);
 
     private static object? Normalise(object? value, string type)
     {
@@ -330,5 +346,4 @@ public sealed class GovernedAwardRuleEngine
     private static bool HasTag(string? actual, string expected)
         => string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
 
-    private static decimal RoundMoney(decimal value) => Math.Round(value, 2, MidpointRounding.AwayFromZero);
 }
