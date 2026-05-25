@@ -52,7 +52,7 @@ static void PublishesApprovedFirstAidSnapshot()
     AssertEqual("ALLOW_FIRST_AID_AMOUNT", rule.RuleId, "compiled rule id");
     AssertEqual("row-first-aid", rule.SourceId, "compiled rule source id");
     AssertEqual("15.5", rule.ClauseReference, "compiled rule clause");
-    AssertEqual("FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014 : StandardRateWeekly * 0.0108) : 0", rule.Expression, "baseline expression");
+    AssertEqual("FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0m", rule.Expression, "baseline expression");
 }
 
 static void CompiledSnapshotCalculatesFirstAid()
@@ -68,7 +68,7 @@ static void CompiledSnapshotCalculatesFirstAid()
 
     var line = result.PayrollLines.Single(l => l.OutputKey == "FirstAidAllowanceAmount");
     AssertEqual(12.12m, line.Amount, "first-aid allowance amount");
-    AssertEqual("row-first-aid", result.RuleTrace.Single(t => t.RuleId == "ALLOW_FIRST_AID_AMOUNT").RuleId == "ALLOW_FIRST_AID_AMOUNT" ? snapshot.RulesJson.Rules.Single().SourceId : "", "trace source id through rule");
+    AssertEqual("evaluated", result.RuleTrace.Single(t => t.RuleId == "ALLOW_FIRST_AID_AMOUNT").Status, "runtime trace status");
     AssertTrue(result.Warnings.All(w => w.Severity != "error"), "runtime should not emit compiler-related errors");
 }
 
