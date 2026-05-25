@@ -159,10 +159,10 @@ public sealed class RuntimeRuleEngineServiceTests
 
         void AssertLine(string outputKey, decimal roundedAmount, decimal rawAmount)
         {
-            var line = Assert.Single(result.PayrollLines.Where(l => l.OutputKey == outputKey));
+            var line = Assert.Single(result.PayrollLines, l => l.OutputKey == outputKey);
             Assert.Equal(roundedAmount, line.Amount);
 
-            var trace = Assert.Single(result.RuleTrace.Where(t => t.OutputKey == outputKey));
+            var trace = Assert.Single(result.RuleTrace, t => t.OutputKey == outputKey);
             Assert.Equal(rawAmount, trace.RawValue);
             Assert.Equal(roundedAmount, trace.RoundedValue);
             Assert.Equal(rawAmount, Assert.IsType<decimal>(trace.Value));
