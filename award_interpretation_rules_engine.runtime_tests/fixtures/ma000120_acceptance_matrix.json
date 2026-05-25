@@ -1,0 +1,274 @@
+{
+  "awardCode": "MA000120",
+  "sourceFixturePath": "award_interpretation_rules_engine/fixtures/MA000120.acceptance.html",
+  "samplePayRunPath": "award_interpretation_rules_engine/samples/sample-payrun-ma000120.json",
+  "scenarios": [
+    {
+      "name": "poc-sample-ordinary-and-overtime",
+      "payRunPath": "award_interpretation_rules_engine/samples/sample-payrun-ma000120.json",
+      "expectedPayrollGross": 1247.22,
+      "expectedAwardReferenceGross": 1247.22,
+      "expectedBlockedPayrollGross": 0,
+      "expectedPayrollLines": [
+        { "outputKey": "OrdinaryPayAmount" },
+        { "outputKey": "OvertimeFirstTwoAmount" },
+        { "outputKey": "OvertimeAfterTwoAmount" }
+      ],
+      "expectedTraceRuleIds": [
+        "PAY_ORDINARY_HOURS",
+        "PAY_OVERTIME_FIRST_TWO_AMOUNT",
+        "PAY_OVERTIME_AFTER_TWO_AMOUNT"
+      ]
+    },
+    {
+      "name": "ordinary-time-with-first-aid-and-laundry-allowances",
+      "payRun": {
+        "employeeReference": "EMP-ALLOW",
+        "payPeriodReference": "2026-W22-ALLOW",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-25",
+            "dayType": "weekday",
+            "shifts": [
+              {
+                "start": "08:00",
+                "end": "16:30",
+                "breaks": [
+                  { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+                ]
+              }
+            ]
+          }
+        ],
+        "allowances": {
+          "firstAidRequired": true,
+          "laundryRequired": true,
+          "laundryRequiresIroning": true
+        }
+      },
+      "expectedPayrollGross": 250.18,
+      "expectedAwardReferenceGross": 250.18,
+      "expectedBlockedPayrollGross": 0,
+      "expectedPayrollLines": [
+        { "outputKey": "OrdinaryPayAmount", "amount": 236.16 },
+        { "outputKey": "FirstAidAllowanceAmount", "amount": 12.12 },
+        { "outputKey": "LaundryAllowanceAmount", "amount": 1.90 }
+      ],
+      "expectedTraceRuleIds": [
+        "PAY_ORDINARY_HOURS",
+        "ALLOW_FIRST_AID_AMOUNT",
+        "ALLOW_LAUNDRY_AMOUNT"
+      ]
+    },
+    {
+      "name": "public-holiday-minimum-payment",
+      "payRun": {
+        "employeeReference": "EMP-PH",
+        "payPeriodReference": "2026-W22-PH",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-25",
+            "dayType": "public_holiday",
+            "actualPublicHoliday": true,
+            "shifts": [
+              { "start": "09:00", "end": "11:00" }
+            ]
+          }
+        ]
+      },
+      "expectedPayrollGross": 295.20,
+      "expectedAwardReferenceGross": 295.20,
+      "expectedBlockedPayrollGross": 0,
+      "expectedPayrollLines": [
+        { "outputKey": "PublicHolidayAmount", "amount": 295.20 }
+      ],
+      "expectedTraceRuleIds": [
+        "PH_RESOLVE_IS_PUBLIC_HOLIDAY",
+        "PH_RESOLVE_DAY_TYPE",
+        "PAY_PUBLIC_HOLIDAY_AMOUNT"
+      ]
+    },
+    {
+      "name": "toil-accrues-and-suppresses-payroll-overtime",
+      "payRun": {
+        "employeeReference": "EMP-TOIL",
+        "payPeriodReference": "2026-W22-TOIL",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-25",
+            "dayType": "weekday",
+            "shifts": [
+              {
+                "start": "08:00",
+                "end": "18:30",
+                "tag": "toil",
+                "evidenceReference": "TOIL-AGREE-001",
+                "breaks": [
+                  { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expectedPayrollGross": 236.16,
+      "expectedAwardReferenceGross": 324.72,
+      "expectedBlockedPayrollGross": 0,
+      "expectedToilAccruedHours": 2,
+      "expectedPayrollLines": [
+        { "outputKey": "OrdinaryPayAmount", "amount": 236.16 }
+      ],
+      "expectedAwardReferenceLines": [
+        { "outputKey": "OvertimeFirstTwoAmount", "amount": 88.56 }
+      ],
+      "expectedTraceRuleIds": [
+        "TOIL_ELIGIBLE",
+        "TOIL_ACCRUAL_HOURS",
+        "PAY_OVERTIME_FIRST_TWO_AMOUNT"
+      ]
+    },
+    {
+      "name": "insufficient-rest-warning-is-traced",
+      "payRun": {
+        "employeeReference": "EMP-FATIGUE",
+        "payPeriodReference": "2026-W22-FATIGUE",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-25",
+            "dayType": "weekday",
+            "shifts": [
+              {
+                "start": "08:00",
+                "end": "16:30",
+                "breaks": [
+                  { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+                ]
+              },
+              {
+                "start": "22:00",
+                "end": "06:30",
+                "breaks": [
+                  { "start": "02:00", "end": "02:30", "type": "meal", "paid": false }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expectedWarnings": [
+        { "ruleId": "OT_INSUFFICIENT_REST_TRIGGER", "blocksPayrollExport": false }
+      ],
+      "expectedTraceRuleIds": [
+        "OT_INSUFFICIENT_REST_TRIGGER",
+        "OT_INSUFFICIENT_REST_HOURS"
+      ]
+    },
+    {
+      "name": "meal-allowance-blocks-payroll-export",
+      "payRun": {
+        "employeeReference": "EMP-BLOCK",
+        "payPeriodReference": "2026-W22-BLOCK",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-25",
+            "dayType": "weekday",
+            "shifts": [
+              {
+                "start": "08:00",
+                "end": "16:30",
+                "breaks": [
+                  { "start": "12:00", "end": "12:30", "type": "meal", "paid": false }
+                ]
+              }
+            ]
+          }
+        ],
+        "allowances": {
+          "mealAllowanceRequired": true
+        }
+      },
+      "expectedPayrollGross": 0,
+      "expectedAwardReferenceGross": 251.64,
+      "expectedBlockedPayrollGross": 236.16,
+      "expectedBlockedPayrollLines": [
+        { "outputKey": "OrdinaryPayAmount", "amount": 236.16 }
+      ],
+      "expectedWarnings": [
+        { "ruleId": "ALLOW_MEAL_AMOUNT", "blocksPayrollExport": true }
+      ],
+      "expectedTraceRuleIds": [
+        "ALLOW_MEAL_AMOUNT",
+        "PAY_ORDINARY_HOURS"
+      ]
+    },
+    {
+      "name": "annual-leave-loading-higher-of-reference",
+      "payRun": {
+        "employeeReference": "EMP-LEAVE",
+        "payPeriodReference": "2026-W22-LEAVE",
+        "region": "VIC",
+        "employee": {
+          "classificationCode": "CSE_L3",
+          "employmentCategory": "full_time",
+          "employmentProfileCode": "FULL_TIME",
+          "contractedWeeklyHours": 38
+        },
+        "days": [
+          {
+            "date": "2026-05-31",
+            "dayType": "sunday",
+            "leaveType": "annual",
+            "leaveHours": 7.6,
+            "leavePenaltyMultiplier": 2.0
+          }
+        ]
+      },
+      "expectedPayrollGross": 448.70,
+      "expectedAwardReferenceGross": 448.70,
+      "expectedBlockedPayrollGross": 0,
+      "expectedPayrollLines": [
+        { "outputKey": "AnnualLeaveBaseAmount", "amount": 224.35 },
+        { "outputKey": "AnnualLeaveLoadingAmount", "amount": 224.35 }
+      ],
+      "expectedTraceRuleIds": [
+        "LEAVE_ANNUAL_BASE_AMOUNT",
+        "LEAVE_ANNUAL_LOADING_AMOUNT"
+      ]
+    }
+  ]
+}
