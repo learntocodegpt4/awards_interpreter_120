@@ -34,6 +34,7 @@ This matrix maps requirements to implementation tasks, automated tests, and Manu
 | Fatigue break rules calculate premium time until recovery. | RULE-013 | Fatigue break tests. | RULE-MQA-011. | TODO |
 | Leave loading and leave overlays are calculated correctly. | RULE-014 | Leave loading tests. | RULE-MQA-012. | TODO |
 | BOOT/base-award comparison produces top-ups. | RULE-015 | BOOT comparison tests. | RULE-MQA-013. | TODO |
+| MA000120 sample pay run matches POC CLI artifacts. | ROS-41 | `Ma000120PocParityTests.Production_pipeline_outputs_match_poc_cli_fixtures`; `dotnet run --project award_interpretation_rules_engine/AwardInterpretationRulesEngine.csproj -- --acceptance`. | `docs/tests/ros-41-ma000120-poc-parity.md`. | DONE |
 
 ## Review Cadence
 
