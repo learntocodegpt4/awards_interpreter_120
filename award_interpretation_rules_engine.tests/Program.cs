@@ -5,6 +5,8 @@ var tests = new (string Name, Action Test)[]
 {
     ("publishes approved first-aid condition into immutable snapshot", PublishesApprovedFirstAidSnapshot),
     ("compiled first-aid snapshot calculates through governed runtime", CompiledSnapshotCalculatesFirstAid),
+    ("publishes repeatable MA000120 compiler baseline snapshot", PublishesMa000120CompilerBaselineSnapshot),
+    ("compiled MA000120 baseline calculates POC 2 acceptance scenarios", CompiledMa000120BaselineCalculatesPoc2Scenarios),
     ("rejects rows that are not approved", RejectsUnapprovedRows),
     ("rejects raw DynamicExpresso expressions in condition_json", RejectsRawExpression),
     ("rejects unsupported triggers", RejectsUnsupportedTrigger),
@@ -70,6 +72,131 @@ static void CompiledSnapshotCalculatesFirstAid()
     AssertEqual(12.12m, line.Amount, "first-aid allowance amount");
     AssertEqual("evaluated", result.RuleTrace.Single(t => t.RuleId == "ALLOW_FIRST_AID_AMOUNT").Status, "runtime trace status");
     AssertTrue(result.Warnings.All(w => w.Severity != "error"), "runtime should not emit compiler-related errors");
+}
+
+static void PublishesMa000120CompilerBaselineSnapshot()
+{
+    var request = LoadBaselineRequest();
+    var snapshot = Compile(request);
+    var repeatedSnapshot = Compile(LoadBaselineRequest());
+
+    AssertEqual("published", snapshot.Status, "baseline snapshot status");
+    AssertEqual("MA000120", snapshot.AwardCode, "baseline award code");
+    AssertEqual(new DateOnly(2026, 3, 1), snapshot.EffectiveFrom, "baseline effective_from");
+    AssertEqual("afd49d15dce3743067575bfc4fa1ee9d1163f9ea2fa0167fa3027b73ab25ea67", snapshot.SourceSnapshotHash, "baseline source hash");
+    AssertEqual("ma000120-template-parser/1.0.0", snapshot.ParserVersion, "baseline parser version");
+    AssertEqual(GovernedRuleCompiler.CurrentCompilerVersion, snapshot.CompilerVersion, "baseline compiler version");
+    AssertEqual(8, snapshot.SourceRowIds.Count, "baseline semantic row count");
+    AssertEqual(8, snapshot.SourceContentHashes.Count, "baseline source row hash count");
+    AssertEqual(64, snapshot.SnapshotContentHash.Length, "baseline content hash length");
+    AssertEqual(snapshot.SnapshotContentHash, repeatedSnapshot.SnapshotContentHash, "baseline content hash is repeatable");
+    AssertEqual(snapshot.RuleSetVersionId, repeatedSnapshot.RuleSetVersionId, "baseline rule version id is repeatable");
+
+    AssertRule(snapshot, "PAY_ORDINARY_HOURS", "21", "MA000120-COMPILER-BASELINE-ORDINARY_TIME");
+    AssertRule(snapshot, "PAY_OVERTIME_FIRST_TWO_AMOUNT", "23.2", "MA000120-COMPILER-BASELINE-OVERTIME");
+    AssertRule(snapshot, "ALLOW_FIRST_AID_AMOUNT", "15", "MA000120-COMPILER-BASELINE-ALLOWANCES");
+    AssertRule(snapshot, "PAY_PUBLIC_HOLIDAY_AMOUNT", "27", "MA000120-COMPILER-BASELINE-PUBLIC_HOLIDAY");
+    AssertRule(snapshot, "TOIL_ACCRUAL_HOURS", "23.8", "MA000120-COMPILER-BASELINE-TOIL");
+    AssertRule(snapshot, "OT_INSUFFICIENT_REST_TRIGGER", "22.3", "MA000120-COMPILER-BASELINE-REST_FATIGUE");
+    AssertRule(snapshot, "LEAVE_ANNUAL_LOADING_AMOUNT", "25", "MA000120-COMPILER-BASELINE-LEAVE_LOADING");
+    AssertRule(snapshot, "PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "Governance", "MA000120-COMPILER-BASELINE-BLOCKED_EXPORTS");
+}
+
+static void CompiledMa000120BaselineCalculatesPoc2Scenarios()
+{
+    var snapshot = Compile(LoadBaselineRequest());
+
+    var sample = Calculate(snapshot, PayRunInput.Load(Path.Combine(EngineProjectRoot(), "samples", "sample-payrun-ma000120.json")));
+    AssertRuntimeContracts(sample);
+    AssertMoney(1247.22m, sample.Calculation.PayrollGross, "compiled sample payroll gross");
+    AssertMoney(1247.22m, sample.Calculation.AwardReferenceGross, "compiled sample award reference gross");
+    AssertEqual(0m, sample.Calculation.BlockedPayrollGross, "compiled sample blocked gross");
+    AssertAnyLine(sample.Calculation.PayrollLines, "OrdinaryPayAmount", "compiled sample ordinary line");
+    AssertAnyLine(sample.Calculation.PayrollLines, "OvertimeFirstTwoAmount", "compiled sample overtime first two line");
+    AssertAnyLine(sample.Calculation.PayrollLines, "OvertimeAfterTwoAmount", "compiled sample overtime after two line");
+
+    var allowances = Calculate(snapshot, BaseInput(
+        "EMP-ALLOW",
+        "2026-W22-ALLOW",
+        [Weekday("2026-05-25", Shift("08:00", "16:30", breaks: [MealBreak("12:00", "12:30")]))],
+        new AllowanceInput { FirstAidRequired = true, LaundryRequired = true, LaundryRequiresIroning = true }));
+    AssertRuntimeContracts(allowances);
+    AssertMoney(236.16m, SumLines(allowances.Calculation.PayrollLines, "OrdinaryPayAmount"), "compiled allowance ordinary amount");
+    AssertMoney(12.12m, SumLines(allowances.Calculation.PayrollLines, "FirstAidAllowanceAmount"), "compiled first aid allowance amount");
+    AssertMoney(1.90m, SumLines(allowances.Calculation.PayrollLines, "LaundryAllowanceAmount"), "compiled laundry allowance amount");
+
+    var publicHoliday = Calculate(snapshot, BaseInput(
+        "EMP-PH",
+        "2026-W22-PH",
+        [
+            new PayRunDay
+            {
+                Date = DateOnly.Parse("2026-05-25"),
+                DayType = "public_holiday",
+                ActualPublicHoliday = true,
+                Shifts = [Shift("09:00", "11:00")]
+            }
+        ]));
+    AssertRuntimeContracts(publicHoliday);
+    AssertMoney(295.20m, SumLines(publicHoliday.Calculation.PayrollLines, "PublicHolidayAmount"), "compiled public holiday minimum payment");
+
+    var toil = Calculate(snapshot, BaseInput(
+        "EMP-TOIL",
+        "2026-W22-TOIL",
+        [Weekday("2026-05-25", Shift("08:00", "18:30", "toil", "TOIL-AGREE-001", [MealBreak("12:00", "12:30")]))]));
+    AssertRuntimeContracts(toil);
+    AssertMoney(236.16m, toil.Calculation.PayrollGross, "compiled TOIL suppresses overtime payroll lines");
+    AssertMoney(2m, toil.Calculation.ToilAccruedHours, "compiled TOIL accrued hours");
+    AssertEqual(0m, SumLines(toil.Calculation.PayrollLines, "OvertimeFirstTwoAmount"), "compiled TOIL payroll overtime amount");
+    AssertMoney(88.56m, SumLines(toil.Calculation.AwardReferenceLines, "OvertimeFirstTwoAmount"), "compiled TOIL award reference overtime amount");
+
+    var fatigue = Calculate(snapshot, BaseInput(
+        "EMP-FATIGUE",
+        "2026-W22-FATIGUE",
+        [
+            new PayRunDay
+            {
+                Date = DateOnly.Parse("2026-05-25"),
+                DayType = "weekday",
+                Shifts =
+                [
+                    Shift("08:00", "16:30", breaks: [MealBreak("12:00", "12:30")]),
+                    Shift("22:00", "06:30", breaks: [MealBreak("02:00", "02:30")])
+                ]
+            }
+        ]));
+    AssertRuntimeContracts(fatigue);
+    AssertTrue(fatigue.Calculation.Warnings.Any(w => w.RuleId == "OT_INSUFFICIENT_REST_TRIGGER"), "compiled fatigue warning exists");
+    AssertTrue(fatigue.Calculation.RuleTrace.Any(t => t.RuleId == "OT_INSUFFICIENT_REST_HOURS" && Convert.ToDecimal(t.Value) > 0m), "compiled fatigue overtime trace exists");
+
+    var leave = Calculate(snapshot, BaseInput(
+        "EMP-LEAVE",
+        "2026-W22-LEAVE",
+        [
+            new PayRunDay
+            {
+                Date = DateOnly.Parse("2026-05-31"),
+                DayType = "sunday",
+                LeaveType = "annual",
+                LeaveHours = 7.6m,
+                LeavePenaltyMultiplier = 2.0m
+            }
+        ]));
+    AssertRuntimeContracts(leave);
+    AssertMoney(224.35m, SumLines(leave.Calculation.PayrollLines, "AnnualLeaveBaseAmount"), "compiled annual leave base amount");
+    AssertMoney(224.35m, SumLines(leave.Calculation.PayrollLines, "AnnualLeaveLoadingAmount"), "compiled annual leave loading amount");
+    AssertEqual(0m, SumLines(leave.Calculation.PayrollLines, "SundayAmount"), "compiled leave does not create Sunday worked line");
+
+    var blocked = Calculate(snapshot, BaseInput(
+        "EMP-BLOCK",
+        "2026-W22-BLOCK",
+        [Weekday("2026-05-25", Shift("08:00", "16:30", breaks: [MealBreak("12:00", "12:30")]))],
+        new AllowanceInput { MealAllowanceRequired = true }));
+    AssertRuntimeContracts(blocked);
+    AssertMoney(0m, blocked.Calculation.PayrollGross, "compiled blocked export payroll gross");
+    AssertMoney(236.16m, blocked.Calculation.BlockedPayrollGross, "compiled blocked ordinary payroll amount");
+    AssertTrue(blocked.Calculation.Warnings.Any(w => w.RuleId == "ALLOW_MEAL_AMOUNT" && w.BlocksPayrollExport), "compiled manual meal allowance blocks export");
+    AssertAnyLine(blocked.Calculation.BlockedPayrollLines, "OrdinaryPayAmount", "compiled blocked ordinary line");
 }
 
 static void RejectsUnapprovedRows()
@@ -175,6 +302,78 @@ static RuleCompilationRequest ValidRequest() => new()
     ]
 };
 
+static RuleCompilationRequest LoadBaselineRequest()
+{
+    var path = Path.Combine(EngineProjectRoot(), "fixtures", "MA000120.compiler-baseline.semantic-rows.json");
+    var json = File.ReadAllText(path);
+    return JsonSerializer.Deserialize<RuleCompilationRequest>(json, JsonUtil.Options())
+        ?? throw new InvalidOperationException($"Could not load compiler baseline fixture at {path}.");
+}
+
+static RuleCalculationResult Calculate(RuleSetVersion snapshot, PayRunInput payRun)
+{
+    var service = new RuntimeRuleEngineService(
+        new InMemoryRuleSnapshotStore([snapshot]),
+        new RuleEngineRuntimeOptions
+        {
+            Engine = new EngineOptions
+            {
+                IncludeFinalContext = true,
+                BlockPayrollExportOnErrors = true,
+                FixedCalculationTimestampUtc = DateTimeOffset.Parse("2026-03-01T00:00:00Z")
+            }
+        });
+
+    return service.CalculateAsync(new RuleCalculationRequest
+    {
+        TenantId = "tenant-baseline",
+        CorrelationId = $"compiler-baseline-{payRun.PayPeriodReference}",
+        AwardCode = "MA000120",
+        RuleSetVersionId = snapshot.RuleSetVersionId,
+        PayRun = payRun
+    }).GetAwaiter().GetResult();
+}
+
+static PayRunInput BaseInput(string employeeReference, string periodReference, List<PayRunDay> days, AllowanceInput? allowances = null) => new()
+{
+    EmployeeReference = employeeReference,
+    PayPeriodReference = periodReference,
+    Region = "VIC",
+    Employee = new EmployeeInput
+    {
+        ClassificationCode = "CSE_L3",
+        EmploymentCategory = "full_time",
+        EmploymentProfileCode = "FULL_TIME",
+        ContractedWeeklyHours = 38m
+    },
+    Days = days,
+    Allowances = allowances ?? new AllowanceInput()
+};
+
+static PayRunDay Weekday(string date, PayRunShift shift) => new()
+{
+    Date = DateOnly.Parse(date),
+    DayType = "weekday",
+    Shifts = [shift]
+};
+
+static PayRunShift Shift(string start, string end, string tag = "none", string evidence = "", List<PayRunBreak>? breaks = null) => new()
+{
+    Start = start,
+    End = end,
+    Tag = tag,
+    EvidenceReference = evidence,
+    Breaks = breaks ?? []
+};
+
+static PayRunBreak MealBreak(string start, string end) => new()
+{
+    Start = start,
+    End = end,
+    Type = "meal",
+    Paid = false
+};
+
 static Dictionary<string, object?> BuildCompleteParameters(GovernedExpressionLibrary library)
 {
     var parameters = new Dictionary<string, object?>(StringComparer.OrdinalIgnoreCase);
@@ -243,6 +442,62 @@ static object SampleValue(string type, string name)
     if (type.Equals("bool", StringComparison.OrdinalIgnoreCase)) return false;
     if (type.Equals("string", StringComparison.OrdinalIgnoreCase)) return name.Contains("Type", StringComparison.OrdinalIgnoreCase) ? "weekday" : "";
     return 0m;
+}
+
+static void AssertRule(RuleSetVersion snapshot, string ruleId, string clauseReference, string sourceId)
+{
+    var rule = snapshot.RulesJson.Rules.SingleOrDefault(r => r.RuleId == ruleId)
+        ?? throw new InvalidOperationException($"Expected compiled rule {ruleId}.");
+
+    AssertEqual(clauseReference, rule.ClauseReference, $"{ruleId} clause reference");
+    AssertEqual(sourceId, rule.SourceId, $"{ruleId} source id");
+    AssertTrue(rule.EvidenceRequirements.Count > 0, $"{ruleId} evidence requirements");
+}
+
+static void AssertRuntimeContracts(RuleCalculationResult result)
+{
+    AssertTrue(result.ComplianceExceptions.All(e => e.RuleId != "RULE_SNAPSHOT_REJECTED"), "compiled snapshot accepted by runtime service");
+
+    var failedTrace = result.Calculation.RuleTrace.Where(t => t.Status != "evaluated").ToList();
+    AssertTrue(failedTrace.Count == 0, $"all compiled rules evaluate. Failures: {string.Join(", ", failedTrace.Select(t => $"{t.RuleId}:{t.Error}"))}");
+
+    var traced = result.Calculation.RuleTrace
+        .Where(t => t.Status == "evaluated")
+        .Select(t => (t.SegmentId, t.RuleId))
+        .ToHashSet();
+
+    foreach (var line in result.Calculation.PayrollLines.Concat(result.Calculation.AwardReferenceLines).Concat(result.Calculation.BlockedPayrollLines))
+        AssertTrue(traced.Contains((line.SegmentId, line.RuleId)), $"line {line.OutputKey} has rule trace");
+}
+
+static decimal SumLines(IEnumerable<PayLine> lines, string outputKey)
+    => lines.Where(l => l.OutputKey == outputKey).Sum(l => l.Amount);
+
+static void AssertAnyLine(IEnumerable<PayLine> lines, string outputKey, string name)
+    => AssertTrue(lines.Any(l => l.OutputKey == outputKey), name);
+
+static void AssertMoney(decimal expected, decimal actual, string name)
+{
+    if (Math.Abs(expected - actual) > 0.005m)
+        throw new InvalidOperationException($"{name}: expected {expected:F2}, actual {actual:F2}");
+}
+
+static string EngineProjectRoot()
+{
+    var current = Directory.GetCurrentDirectory();
+    while (!File.Exists(Path.Combine(current, "AwardInterpretationRulesEngine.csproj")))
+    {
+        var childProject = Path.Combine(current, "award_interpretation_rules_engine", "AwardInterpretationRulesEngine.csproj");
+        if (File.Exists(childProject))
+            return Path.Combine(current, "award_interpretation_rules_engine");
+
+        var parent = Directory.GetParent(current)?.FullName;
+        if (parent is null)
+            throw new InvalidOperationException("Could not locate AwardInterpretationRulesEngine.csproj.");
+        current = parent;
+    }
+
+    return current;
 }
 
 static void AssertEqual<T>(T expected, T actual, string message)
