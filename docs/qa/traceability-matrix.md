@@ -13,12 +13,12 @@ This matrix maps requirements to implementation tasks, automated tests, and Manu
 | First aid default uses provenance and does not over-default on-call. | INT-007 | `tests/test_clause_interpreter.py` covers first aid everyday default and ambiguous on-call manual review. | INT-MQA-001, INT-MQA-010. | IN_PROGRESS |
 | Ambiguous and low-confidence rows route to review. | INT-008 | `tests/test_clause_interpreter.py` covers ambiguous on-call manual review. | INT-MQA-010. | IN_PROGRESS |
 | LLM extraction is advisory and gated. | INT-009 | LLM candidate cannot publish without review. | QA reviews candidate evidence. | TODO |
-| Parser output is traceable to source row and clause. | INT-010 | Trace metadata tests. | QA follows parsed field to source evidence. | TODO |
-| Parser uses allowance, penalty, clause statement, and table context as source input. | INT-011 | Source bundle provenance tests. | INT-MQA-011. | TODO |
-| Penalty compounding and base-rate reference are extracted or reviewed. | INT-012 | Compounding wording tests. | INT-MQA-012. | TODO |
+| Parser output is traceable to source row and clause. | INT-010 | `RosteredAI_ETL/tests/test_clause_interpreter.py` checks parser version, source hash, confidence, and evidence. | QA follows parsed field to source evidence. | IN_PROGRESS |
+| Parser uses allowance, penalty, clause statement, and table context as source input. | INT-011 | `RosteredAI_ETL/tests/test_clause_interpreter.py` checks source bundle field provenance. | INT-MQA-011. | IN_PROGRESS |
+| Penalty compounding and base-rate reference are extracted or reviewed. | INT-012 | `RosteredAI_ETL/tests/test_golden_corpus.py` covers ordinary-rate, loaded-rate, and ambiguous compounding rows. | INT-MQA-012. | IN_PROGRESS |
 | Low-confidence extraction has a HITL review path. | INT-013 | Review transition tests. | INT-MQA-013. | TODO |
 | Parser accuracy is measured against a ground-truth corpus. | INT-014, INT-015 | F1/precision/recall deployment gate. | QA reviews corpus and regression report. | TODO |
-| Penalty parser coverage matches allowance parser coverage. | INT-016 | Penalty golden corpus tests. | QA validates penalty source rows. | TODO |
+| Penalty parser coverage matches allowance parser coverage. | INT-016 | `RosteredAI_ETL/tests/test_golden_corpus.py` covers MA000120 penalty rows and review routing. | QA validates penalty source rows. | IN_PROGRESS |
 | Rule snapshots are immutable and versioned. | RULE-001 | Contract and immutability tests. | QA confirms calculation references one version. | TODO |
 | Published semantics compile to engine rules. | RULE-002 | Compiler tests from golden interpreter outputs. | QA confirms compiled rule matches clause. | TODO |
 | Timesheet inputs normalize before calculation. | RULE-003 | Segment normalization tests. | QA validates segment timeline. | TODO |
