@@ -165,13 +165,30 @@ public static class Ma000120InterpretationBuilder
                 Trigger = trigger,
                 Basis = basis,
                 DefaultedFields = defaultedFields ?? [],
-                Evidence =
-                [
-                    new ConditionEvidence { Field = "trigger", Text = evidenceText, Source = "ma000120_deterministic_template" },
-                    new ConditionEvidence { Field = "clause", Text = clause, Source = "award_clause_reference" }
-                ]
+                Evidence = BuildEvidence(clause, evidenceText, defaultedFields)
             }
         };
+    }
+
+    private static List<ConditionEvidence> BuildEvidence(string clause, string evidenceText, List<string>? defaultedFields)
+    {
+        var evidence = new List<ConditionEvidence>
+        {
+            new() { Field = "trigger", Text = evidenceText, Source = "ma000120_deterministic_template" },
+            new() { Field = "clause", Text = clause, Source = "award_clause_reference" }
+        };
+
+        foreach (var field in defaultedFields ?? [])
+        {
+            evidence.Add(new ConditionEvidence
+            {
+                Field = field,
+                Text = "Deterministic MA000120 template applies everyday applicability defaults.",
+                Source = "domain_default"
+            });
+        }
+
+        return evidence;
     }
 
     private static List<ClassificationRate> BuildClassifications() =>

@@ -588,7 +588,14 @@ public sealed class RuntimeRuleEngineServiceTests
             ],
             Allowances = new AllowanceReference { StandardRateWeekly = 1121.80m }
         },
-        Parameters = [new ParameterDefinition { Name = "ClassificationCode", Required = true, Type = "string" }],
+        Parameters =
+        [
+            new ParameterDefinition { Name = "ClassificationCode", Required = true, Type = "string" },
+            new ParameterDefinition { Name = "PaidHours", Required = false, Type = "decimal" },
+            new ParameterDefinition { Name = "VehicleKm", Required = false, Type = "decimal" },
+            new ParameterDefinition { Name = "ShiftCount", Required = false, Type = "decimal" },
+            new ParameterDefinition { Name = "AllPurposeAllowanceHourly", Required = false, Type = "decimal" }
+        ],
         Rules =
         [
             RoundingRule("ROUND_HOURLY", "Hourly amount.", "PaidHours * BaseRate", "HourlyAmount"),
@@ -690,12 +697,16 @@ public sealed class RuntimeRuleEngineServiceTests
         public GovernedExpressionLibrary? LastLibrary { get; private set; }
         public IReadOnlyList<PayRunRequest> LastSegments { get; private set; } = [];
 
-        public IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library)
+        public TimesheetNormalisationResult BuildNormalisedSegments(PayRunInput input, GovernedExpressionLibrary library)
         {
             LastLibrary = library;
-            LastSegments = _inner.BuildSegmentRequests(input, library);
-            return LastSegments;
+            var normalisation = _inner.BuildNormalisedSegments(input, library);
+            LastSegments = normalisation.SegmentRequests;
+            return normalisation;
         }
+
+        public IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library)
+            => BuildNormalisedSegments(input, library).SegmentRequests;
     }
 
     private sealed class RecordingRuleCalculator : IGovernedRuleCalculator

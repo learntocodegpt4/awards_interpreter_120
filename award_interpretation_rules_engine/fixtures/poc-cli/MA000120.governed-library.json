@@ -159,6 +159,22 @@
       "allowedValues": null
     },
     {
+      "name": "SegmentKind",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "WorkDate",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
       "name": "DayType",
       "type": "string",
       "required": true,
@@ -215,6 +231,38 @@
       "allowedValues": null
     },
     {
+      "name": "IsWorkedSegment",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsBreakSegment",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsPaidBreakSegment",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsUnpaidBreakSegment",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
       "name": "PaidHoursBeforeSegmentInShift",
       "type": "decimal",
       "required": true,
@@ -264,6 +312,30 @@
     },
     {
       "name": "IsPermanentNightShift",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsOnCall",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsRecall",
+      "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "IsOvernight",
       "type": "bool",
       "required": true,
       "default": null,
@@ -343,8 +415,64 @@
       "allowedValues": null
     },
     {
+      "name": "PublicHolidayId",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PublicHolidayStartLocal",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "PublicHolidayEndLocal",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
       "name": "HasPublicHolidayElectionEvidence",
       "type": "bool",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "TotalUnpaidBreakMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "TotalPaidBreakMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "SegmentUnpaidBreakMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "SegmentPaidBreakMinutes",
+      "type": "decimal",
       "required": true,
       "default": null,
       "description": "",
@@ -463,6 +591,54 @@
       "allowedValues": null
     },
     {
+      "name": "RosterContext",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RosterStartLocal",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RosterEndLocal",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RosterStartMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RosterEndMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
+      "name": "RosterVarianceMinutes",
+      "type": "decimal",
+      "required": true,
+      "default": null,
+      "description": "",
+      "allowedValues": null
+    },
+    {
       "name": "OpeningToilBalanceHours",
       "type": "decimal",
       "required": true,
@@ -536,7 +712,7 @@
     },
     {
       "name": "LaundryRequiresIroning",
-      "type": "decimal",
+      "type": "bool",
       "required": true,
       "default": null,
       "description": "",

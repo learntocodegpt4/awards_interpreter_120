@@ -83,13 +83,18 @@ public interface IRuntimeRuleEngineService
 
 public interface ITimesheetSegmentNormaliser
 {
+    TimesheetNormalisationResult BuildNormalisedSegments(PayRunInput input, GovernedExpressionLibrary library);
+
     IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library);
 }
 
 public sealed class TimesheetSegmentNormaliser : ITimesheetSegmentNormaliser
 {
+    public TimesheetNormalisationResult BuildNormalisedSegments(PayRunInput input, GovernedExpressionLibrary library)
+        => new TimesheetNormaliser(library).BuildNormalisedSegments(input);
+
     public IReadOnlyList<PayRunRequest> BuildSegmentRequests(PayRunInput input, GovernedExpressionLibrary library)
-        => new TimesheetNormaliser(library).BuildSegmentRequests(input);
+        => BuildNormalisedSegments(input, library).SegmentRequests;
 }
 
 public interface IGovernedRuleCalculator
@@ -224,7 +229,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         result.Calculation.EmployeeReference = request.PayRun.EmployeeReference;
         result.Calculation.PayPeriodReference = request.PayRun.PayPeriodReference;
 
-        var normalisation = new TimesheetNormaliser(library).BuildNormalisedSegments(request.PayRun);
+        var normalisation = _segmentNormaliser.BuildNormalisedSegments(request.PayRun, library);
         _logger.LogDebug(
             "Normalised {SegmentCount} pay segments for tenant {TenantId}, award {AwardCode}, rule version {RuleSetVersionId}, correlation {CorrelationId}.",
             normalisation.SegmentRequests.Count,
