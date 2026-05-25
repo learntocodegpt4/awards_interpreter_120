@@ -138,7 +138,7 @@ public static class Ma000120InterpretationBuilder
     {
         var rules = new List<RuleDefinition>();
 
-        Rule(string id, string phase, decimal precedence, string clause, string desc, string expr, string key, string type, string action = "set_value", string review = "auto")
+        void Rule(string id, string phase, decimal precedence, string clause, string desc, string expr, string key, string type, string action = "set_value", string review = "auto")
             => rules.Add(new RuleDefinition { RuleId = id, EvaluationPhase = phase, Precedence = precedence, ClauseReference = clause, Description = desc, Expression = expr, OutputKey = key, OutputType = type, Action = action, ManualReviewPolicy = review, EffectiveFrom = "2026-03-01" });
 
         Rule("PRE_EVIDENCE_REQUIRED_FOR_AGREEMENT_TAGS", "PRECONDITIONS", 1, "Evidence governance",
@@ -213,12 +213,12 @@ public static class Ma000120InterpretationBuilder
 
         Rule("PAY_ORDINARY_HOURS", "PAY_LINE_CALCULATION", 60, "14, 21",
             "Ordinary weekday pay amount.",
-            "ResolvedDayType == \"weekday\" ? Max(0, PaidHours - WeekdayOvertimeHours) * PenaltyBaseRate * (EmploymentCategory == \"casual\" ? 1.25 : 1.0) : 0",
+            "ResolvedDayType == \"weekday\" ? Max(0, PaidHours - WeekdayOvertimeHours) * PenaltyBaseRate * (EmploymentCategory == \"casual\" ? 1.25m : 1.0m) : 0",
             "OrdinaryPayAmount", "decimal", "payroll_line");
 
         Rule("PAY_SHIFTWORK_MULTIPLIER", "PAY_CATEGORY_SELECTION", 61, "23.4",
             "Select shiftwork multiplier.",
-            "(IsPermanentNightShift || HasTag(ShiftTag, \"permanentNightShift\")) ? 1.30 : (IsShiftworker && ShiftStartMinutes >= 300 && ShiftStartMinutes < 360 ? 1.10 : (IsShiftworker && ShiftEndMinutes > 1110 && ShiftEndMinutes <= 1440 ? 1.15 : (IsShiftworker && (ShiftEndMinutes > 1440 || ShiftEndMinutes <= 480) ? 1.175 : 1.0)))",
+            "(IsPermanentNightShift || HasTag(ShiftTag, \"permanentNightShift\")) ? 1.30m : (IsShiftworker && ShiftStartMinutes >= 300 && ShiftStartMinutes < 360 ? 1.10m : (IsShiftworker && ShiftEndMinutes > 1110 && ShiftEndMinutes <= 1440 ? 1.15m : (IsShiftworker && (ShiftEndMinutes > 1440 || ShiftEndMinutes <= 480) ? 1.175m : 1.0m)))",
             "ShiftworkMultiplier", "decimal");
 
         Rule("PAY_SHIFTWORK_AMOUNT", "PAY_LINE_CALCULATION", 61.1m, "23.4",
@@ -228,12 +228,12 @@ public static class Ma000120InterpretationBuilder
 
         Rule("PAY_OVERTIME_FIRST_TWO_MULTIPLIER", "PAY_CATEGORY_SELECTION", 62, "23.2",
             "Overtime multiplier for first two hours.",
-            "EmploymentCategory == \"casual\" ? 1.75 : 1.5",
+            "EmploymentCategory == \"casual\" ? 1.75m : 1.5m",
             "OvertimeFirstTwoMultiplier", "decimal");
 
         Rule("PAY_OVERTIME_AFTER_TWO_MULTIPLIER", "PAY_CATEGORY_SELECTION", 63, "23.2",
             "Overtime multiplier after two hours.",
-            "EmploymentCategory == \"casual\" ? 2.25 : 2.0",
+            "EmploymentCategory == \"casual\" ? 2.25m : 2.0m",
             "OvertimeAfterTwoMultiplier", "decimal");
 
         Rule("PAY_OVERTIME_FIRST_TWO_AMOUNT", "PAY_LINE_CALCULATION", 64, "23.2",
@@ -248,17 +248,17 @@ public static class Ma000120InterpretationBuilder
 
         Rule("PAY_SATURDAY_SHIFTWORKER_AMOUNT", "PAY_LINE_CALCULATION", 70, "23.5",
             "Saturday shiftworker ordinary amount.",
-            "ResolvedDayType == \"saturday\" && IsShiftworker ? PaidHours * PenaltyBaseRate * 1.5 : 0",
+            "ResolvedDayType == \"saturday\" && IsShiftworker ? PaidHours * PenaltyBaseRate * 1.5m : 0",
             "SaturdayShiftworkerAmount", "decimal", "payroll_line");
 
         Rule("PAY_SUNDAY_AMOUNT", "PAY_LINE_CALCULATION", 71, "23.5",
             "Sunday work at 200%.",
-            "ResolvedDayType == \"sunday\" ? PaidHours * PenaltyBaseRate * 2.0 : 0",
+            "ResolvedDayType == \"sunday\" ? PaidHours * PenaltyBaseRate * 2.0m : 0",
             "SundayAmount", "decimal", "payroll_line");
 
         Rule("PAY_PUBLIC_HOLIDAY_AMOUNT", "PAY_LINE_CALCULATION", 72, "23.5, 27",
             "Public holiday work at 250%.",
-            "ResolvedDayType == \"public_holiday\" ? PaidHours * PenaltyBaseRate * 2.5 : 0",
+            "ResolvedDayType == \"public_holiday\" ? PaidHours * PenaltyBaseRate * 2.5m : 0",
             "PublicHolidayAmount", "decimal", "payroll_line", "review_if_public_holiday_substituted");
 
         Rule("BREAK_MISSED_MEAL_TRIGGER", "ELIGIBILITY_FLAGS", 80, "22.1",
@@ -268,7 +268,7 @@ public static class Ma000120InterpretationBuilder
 
         Rule("PAY_MISSED_MEAL_UPLIFT_FIRST_TWO", "PAY_LINE_CALCULATION", 85, "22.1, 23.2",
             "Missed meal-break overtime uplift.",
-            "MissedMealBreakTriggered ? Min(MissedMealPenaltyHours, 2) * PenaltyBaseRate * ((EmploymentCategory == \"casual\" ? 1.75 : 1.5) - (EmploymentCategory == \"casual\" ? 1.25 : 1.0)) : 0",
+            "MissedMealBreakTriggered ? Min(MissedMealPenaltyHours, 2) * PenaltyBaseRate * ((EmploymentCategory == \"casual\" ? 1.75m : 1.5m) - (EmploymentCategory == \"casual\" ? 1.25m : 1.0m)) : 0",
             "MissedMealUpliftFirstTwoAmount", "decimal", "payroll_line_with_warning", "review_evidence_and_rounding");
 
         Rule("HD_HIGHER_DUTIES_ELIGIBLE", "ELIGIBILITY_FLAGS", 90, "18",
@@ -283,37 +283,37 @@ public static class Ma000120InterpretationBuilder
 
         Rule("ALLOW_BROKEN_SHIFT_AMOUNT", "ALLOWANCE_CALCULATION", 100, "15.2",
             "Broken shift allowance.",
-            "BrokenShiftCount > 1 ? StandardRateWeekly * 0.0182 : 0",
+            "BrokenShiftCount > 1 ? StandardRateWeekly * 0.0182m : 0",
             "BrokenShiftAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_LAUNDRY_AMOUNT", "ALLOWANCE_CALCULATION", 101, "15.3",
             "Laundry allowance.",
-            "LaundryRequired ? (LaundryRequiresIroning ? 1.90 : 1.20) : 0",
+            "LaundryRequired ? (LaundryRequiresIroning ? 1.90m : 1.20m) : 0",
             "LaundryAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_FIRST_AID_AMOUNT", "ALLOWANCE_CALCULATION", 102, "15.5",
             "First aid allowance.",
-            "FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014 : StandardRateWeekly * 0.0108) : 0",
+            "FirstAidRequired ? (IsOSHC ? WorkedHours * StandardRateWeekly * 0.0014m : StandardRateWeekly * 0.0108m) : 0",
             "FirstAidAllowanceAmount", "decimal", "payroll_line");
 
         Rule("ALLOW_MEAL_AMOUNT", "ALLOWANCE_CALCULATION", 103, "15.6",
             "Meal allowance.",
-            "MealAllowanceRequired ? 15.48 : 0",
+            "MealAllowanceRequired ? 15.48m : 0",
             "MealAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_EXCESS_FARES_AMOUNT", "ALLOWANCE_CALCULATION", 104, "15.4",
             "Excess fares allowance.",
-            "ExcessFaresRequired ? 16.86 : 0",
+            "ExcessFaresRequired ? 16.86m : 0",
             "ExcessFaresAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_VEHICLE_AMOUNT", "ALLOWANCE_CALCULATION", 105, "15.7",
             "Vehicle allowance.",
-            "VehicleType == \"car\" ? VehicleKm * 0.99 : (VehicleType == \"motorcycle\" ? VehicleKm * 0.33 : 0)",
+            "VehicleType == \"car\" ? VehicleKm * 0.99m : (VehicleType == \"motorcycle\" ? VehicleKm * 0.33m : 0)",
             "VehicleAllowanceAmount", "decimal", "manual_payroll_line", "must_be_manager_attested");
 
         Rule("ALLOW_EDUCATIONAL_LEADER_AMOUNT", "ALLOWANCE_CALCULATION", 106, "15.8",
             "Educational leader allowance weekly amount.",
-            "EducationalLeaderDaysPerWeek > 0 ? (4567.31 * EducationalLeaderDaysPerWeek / 5 / 52) : 0",
+            "EducationalLeaderDaysPerWeek > 0 ? (4567.31m * EducationalLeaderDaysPerWeek / 5m / 52m) : 0",
             "EducationalLeaderAllowanceWeeklyAmount", "decimal", "payroll_line", "must_have_regulation_118_assignment");
 
         Rule("TOIL_ELIGIBLE", "TOIL_LEDGER", 120, "23.8",
@@ -340,6 +340,12 @@ public static class Ma000120InterpretationBuilder
             "Award salary top-up amount.",
             "EmploymentCategory == \"salaried\" ? Max(0, AwardReferenceGross - WeeklySalaryAmount) : 0",
             "SalaryTopUpAmount", "decimal", "payroll_line", "salary_reconciliation_required");
+
+        foreach (var rule in rules.Where(r => r.RuleId is "PAY_SATURDAY_SHIFTWORKER_AMOUNT" or "PAY_SUNDAY_AMOUNT" or "PAY_PUBLIC_HOLIDAY_AMOUNT"))
+        {
+            rule.StackingGroup = "day_penalty";
+            rule.StackingPolicy = "highest_of";
+        }
 
         return rules;
     }
