@@ -28,7 +28,7 @@ public sealed class AwardPipeline
 
         var library = Ma000120InterpretationBuilder.BuildLibrary(interpretation, reviewGate);
         var normaliser = new TimesheetNormaliser(library);
-        var segmentRequests = normaliser.BuildSegmentRequests(payRun);
+        var normalisation = normaliser.BuildNormalisedSegments(payRun);
 
         var engine = new GovernedAwardRuleEngine(library, _settings.Engine);
         var aggregate = new AggregatePayRunResult
@@ -36,8 +36,9 @@ public sealed class AwardPipeline
             EmployeeReference = payRun.EmployeeReference,
             PayPeriodReference = payRun.PayPeriodReference
         };
+        aggregate.Warnings.AddRange(normalisation.Warnings);
 
-        foreach (var request in segmentRequests)
+        foreach (var request in normalisation.BlocksPayrollExport ? Enumerable.Empty<PayRunRequest>() : normalisation.SegmentRequests)
         {
             var segment = engine.Calculate(request);
             aggregate.PayrollLines.AddRange(segment.PayrollLines);

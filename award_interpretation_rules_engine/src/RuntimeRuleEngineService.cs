@@ -177,14 +177,7 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
 
         var library = snapshot.RulesJson;
         var normaliser = new TimesheetNormaliser(library);
-        var segmentRequests = normaliser.BuildSegmentRequests(request.PayRun);
         var engine = new GovernedAwardRuleEngine(library, _options.Engine, snapshot.RuleSetVersionId);
-
-        foreach (var segmentRequest in segmentRequests)
-        {
-            var segmentResult = engine.Calculate(segmentRequest);
-            AppendSegment(result.Calculation, segmentResult);
-        }
 
         result.RuleSetVersionId = snapshot.RuleSetVersionId;
         result.AwardCode = snapshot.AwardCode;
@@ -192,6 +185,21 @@ public sealed class RuntimeRuleEngineService : IRuntimeRuleEngineService
         result.Calculation.AwardCode = snapshot.AwardCode;
         result.Calculation.EmployeeReference = request.PayRun.EmployeeReference;
         result.Calculation.PayPeriodReference = request.PayRun.PayPeriodReference;
+
+        var normalisation = normaliser.BuildNormalisedSegments(request.PayRun);
+        result.Calculation.Warnings.AddRange(normalisation.Warnings);
+        if (normalisation.BlocksPayrollExport)
+        {
+            FinaliseAggregate(result.Calculation, request.PayRun.Employee.OpeningToilBalanceHours);
+            ProjectComplianceExceptions(result.Calculation, result.ComplianceExceptions);
+            return result;
+        }
+
+        foreach (var segmentRequest in normalisation.SegmentRequests)
+        {
+            var segmentResult = engine.Calculate(segmentRequest);
+            AppendSegment(result.Calculation, segmentResult);
+        }
 
         ApplyStacking(result.Calculation, result.StackingDecisions);
         FinaliseAggregate(result.Calculation, request.PayRun.Employee.OpeningToilBalanceHours);

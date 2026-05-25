@@ -277,6 +277,7 @@ public sealed class PayRunDay
     public decimal LeavePenaltyMultiplier { get; set; } = 1m;
     public string RegularStart { get; set; } = "";
     public string RegularEnd { get; set; } = "";
+    public string RosterContext { get; set; } = "";
     public List<PayRunShift> Shifts { get; set; } = [];
 }
 
@@ -284,9 +285,13 @@ public sealed class PayRunShift
 {
     public string Start { get; set; } = "08:00";
     public string End { get; set; } = "16:30";
+    public string SegmentKind { get; set; } = "clock";
     public string Tag { get; set; } = "none";
     public string EvidenceReference { get; set; } = "";
     public string Team { get; set; } = "";
+    public string RosterStart { get; set; } = "";
+    public string RosterEnd { get; set; } = "";
+    public string RosterContext { get; set; } = "";
     public bool HigherDutiesEnabled { get; set; }
     public string HigherDutiesClassificationCode { get; set; } = "";
     public string HigherDutiesStart { get; set; } = "";
@@ -323,6 +328,60 @@ public sealed class PayRunRequest
     public string PayPeriodReference { get; set; } = "";
     public Dictionary<string, object?> Parameters { get; set; } = new(StringComparer.OrdinalIgnoreCase);
     public Dictionary<string, object?> DerivedParameters { get; set; } = new(StringComparer.OrdinalIgnoreCase);
+}
+
+public sealed class TimesheetNormalisationResult
+{
+    public List<NormalisedTimesheetSegment> Segments { get; set; } = [];
+    public List<PayRunRequest> SegmentRequests { get; set; } = [];
+    public List<RuleWarning> Warnings { get; set; } = [];
+    public bool BlocksPayrollExport => Warnings.Any(w => w.BlocksPayrollExport);
+}
+
+public sealed class NormalisedTimesheetSegment
+{
+    public string SegmentId { get; set; } = "";
+    public string SegmentKind { get; set; } = "clock";
+    public DateOnly WorkDate { get; set; }
+    public DateTime? SourceShiftStartLocal { get; set; }
+    public DateTime? SourceShiftEndLocal { get; set; }
+    public DateTime SegmentStartLocal { get; set; }
+    public DateTime SegmentEndLocal { get; set; }
+    public decimal RawShiftHours { get; set; }
+    public decimal WorkedHours { get; set; }
+    public decimal PaidHours { get; set; }
+    public decimal TotalPaidBreakMinutes { get; set; }
+    public decimal TotalUnpaidBreakMinutes { get; set; }
+    public decimal TotalUnpaidMealBreakMinutes { get; set; }
+    public decimal TotalPaidMealBreakMinutes { get; set; }
+    public decimal SegmentPaidBreakMinutes { get; set; }
+    public decimal SegmentUnpaidBreakMinutes { get; set; }
+    public bool IsWorkedSegment { get; set; }
+    public bool IsBreakSegment { get; set; }
+    public bool IsPaidBreakSegment { get; set; }
+    public bool IsUnpaidBreakSegment { get; set; }
+    public bool IsLeave { get; set; }
+    public string LeaveType { get; set; } = "";
+    public decimal LeaveHours { get; set; }
+    public bool IsOnCall { get; set; }
+    public bool IsRecall { get; set; }
+    public bool IsOvernight { get; set; }
+    public string ShiftTag { get; set; } = "none";
+    public string RosterContext { get; set; } = "";
+    public DateTime? RosterStartLocal { get; set; }
+    public DateTime? RosterEndLocal { get; set; }
+    public decimal RosterStartMinutes { get; set; }
+    public decimal RosterEndMinutes { get; set; }
+    public decimal RosterVarianceMinutes { get; set; }
+    public string DayType { get; set; } = "weekday";
+    public string ResolvedDayType { get; set; } = "weekday";
+    public bool IsPublicHolidayFromCalendar { get; set; }
+    public bool IsActualPublicHoliday { get; set; }
+    public bool IsSubstitutedPublicHoliday { get; set; }
+    public bool IsPartDayPublicHoliday { get; set; }
+    public string PublicHolidayId { get; set; } = "";
+    public DateTime? PublicHolidayStartLocal { get; set; }
+    public DateTime? PublicHolidayEndLocal { get; set; }
 }
 
 public sealed class AggregatePayRunResult

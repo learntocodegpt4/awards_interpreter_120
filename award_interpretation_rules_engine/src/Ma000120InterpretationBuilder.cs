@@ -216,15 +216,19 @@ public static class Ma000120InterpretationBuilder
     {
         string[] required =
         [
-            "ClassificationCode", "EmploymentCategory", "EmploymentProfileCode", "DayType", "ResolvedDayType", "ShiftTag",
-            "HasEvidenceReference", "WorkedHours", "RawShiftHours", "PaidHours", "PaidHoursBeforeSegmentInShift", "WeeklyHoursBeforeShift",
-            "ContractedWeeklyHours", "ShiftStartMinutes", "ShiftEndMinutes", "IsShiftworker", "IsPermanentNightShift",
-            "IsLeave", "LeaveType", "LeaveHours", "LeavePenaltyMultiplier", "IsFirstPayableSegmentForDay", "PayableDayWorkedHours",
-            "IsPublicHolidayFromCalendar", "IsActualPublicHoliday", "IsSubstitutedPublicHoliday", "HasPublicHolidayElectionEvidence",
+            "ClassificationCode", "EmploymentCategory", "EmploymentProfileCode", "SegmentKind", "WorkDate", "DayType", "ResolvedDayType", "ShiftTag",
+            "HasEvidenceReference", "WorkedHours", "RawShiftHours", "PaidHours", "IsWorkedSegment", "IsBreakSegment",
+            "IsPaidBreakSegment", "IsUnpaidBreakSegment", "PaidHoursBeforeSegmentInShift", "WeeklyHoursBeforeShift",
+            "ContractedWeeklyHours", "ShiftStartMinutes", "ShiftEndMinutes", "IsShiftworker", "IsPermanentNightShift", "IsOnCall",
+            "IsRecall", "IsOvernight", "IsLeave", "LeaveType", "LeaveHours", "LeavePenaltyMultiplier", "IsFirstPayableSegmentForDay", "PayableDayWorkedHours",
+            "IsPublicHolidayFromCalendar", "IsActualPublicHoliday", "IsSubstitutedPublicHoliday", "PublicHolidayId",
+            "PublicHolidayStartLocal", "PublicHolidayEndLocal", "HasPublicHolidayElectionEvidence",
+            "TotalUnpaidBreakMinutes", "TotalPaidBreakMinutes", "SegmentUnpaidBreakMinutes", "SegmentPaidBreakMinutes",
             "UnpaidMealBreakMinutes", "PaidMealBreakMinutes", "MealBreakInterrupted", "RequiredToRemainOnPremises",
             "PaidRestPauseCount", "RestHoursSincePreviousShift", "BrokenShiftCount", "BrokenShiftSpreadHours",
             "WorkedHoursBeyondBrokenSpreadCap", "OutsideOrdinarySpanHours", "PartTimeOutsideRegularPatternHours",
-            "MissedMealPenaltyHours", "HigherDutiesHours", "HigherDutiesRate", "OpeningToilBalanceHours",
+            "MissedMealPenaltyHours", "HigherDutiesHours", "HigherDutiesRate", "RosterContext", "RosterStartLocal",
+            "RosterEndLocal", "RosterStartMinutes", "RosterEndMinutes", "RosterVarianceMinutes", "OpeningToilBalanceHours",
             "ToilTakenHours", "ForceToilPayoutHours", "AnnualSalary", "VehicleKm", "VehicleType", "FirstAidRequired",
             "IsOSHC", "LaundryRequired", "LaundryRequiresIroning", "MealAllowanceRequired", "ExcessFaresRequired",
             "EducationalLeaderDaysPerWeek"
@@ -236,7 +240,17 @@ public static class Ma000120InterpretationBuilder
     private static string InferType(string name)
     {
         if (name.StartsWith("Is") || name.StartsWith("Has") || name.EndsWith("Required") || name.Contains("Interrupted") || name.Contains("Remain")) return "bool";
-        if (name.Contains("Code") || name.Contains("Category") || name.Contains("Type") || name.Contains("Tag") || name.Contains("Profile")) return "string";
+        if (name.Contains("Code") ||
+            name.Contains("Category") ||
+            name.Contains("Type") ||
+            name.Contains("Tag") ||
+            name.Contains("Profile") ||
+            name.Contains("Kind") ||
+            name.Contains("Date") ||
+            name.Contains("Id") ||
+            name.Contains("Local") ||
+            name.Contains("Context"))
+            return "string";
         return "decimal";
     }
 
